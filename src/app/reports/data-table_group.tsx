@@ -39,27 +39,18 @@ export function DataTable<TData, TValue>({
         []
       )
     const [rowSelection, setRowSelection] = React.useState({})
-    
-    // Search function to handle global filtering
-    const onSearch = React.useCallback((value: string) => {
-      setSearchQuery(value);
-    }, []);
-
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onColumnFiltersChange: setColumnFilters,
+    
     getFilteredRowModel: getFilteredRowModel(),
     onRowSelectionChange: setRowSelection,
-    getPaginationRowModel: getPaginationRowModel(),
     state: {
         columnFilters,
         rowSelection,
-        globalFilter: searchQuery,
       },
-    onGlobalFilterChange: setSearchQuery,
-    globalFilterFn: "includesString",
   })
  
   return (
@@ -69,9 +60,29 @@ export function DataTable<TData, TValue>({
             <Input
               placeholder="Search by SKU, ASIN, or Item Name..."
               value={searchQuery}
-              onChange={(e) => onSearch(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="max-w-sm rounded-lg"
             />
+            <div className="flex items-center gap-2">
+            <Button 
+              variant={table.getFilteredSelectedRowModel().rows.length ? "default" : "outline"} 
+              size="sm" 
+              className="rounded-lg flex items-center gap-1"
+              onClick={() => table.getFilteredSelectedRowModel().rows}
+            >
+              <Filter className="h-4 w-4" />
+              {table.getFilteredSelectedRowModel().rows.length? "Showing Selected" : "Show Selected"}
+            </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="rounded-lg flex items-center gap-1 text-red-500"
+                onClick={() => table.resetRowSelection()}
+              >
+                <X className="h-4 w-4" />
+                Clear Selection
+              </Button>
+            </div>
         </div>
       </div>
       {/* Custom built table */}
@@ -121,9 +132,10 @@ export function DataTable<TData, TValue>({
          </Table>
         </div>
          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-            Showing <strong>{table.getFilteredRowModel().rows.length}</strong> of <strong>{data.length}</strong> products
-            </span>
+           <span>
+           <strong>{table.getFilteredSelectedRowModel().rows.length}</strong> of{" "}
+             <strong>{table.getFilteredRowModel().rows.length}</strong> row(s) selected.
+           </span>
          </div>
        </div>
        </div>

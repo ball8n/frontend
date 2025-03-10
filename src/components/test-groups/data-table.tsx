@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { TestGroup } from "@/data/test_groups"
+import { TestGroups, TestGroup } from "@/data/test_groups"
 import { PlusCircle } from "lucide-react"
 
 interface DataTableProps {
@@ -39,7 +39,10 @@ export function DataTable({ data, onAddGroup }: DataTableProps) {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-sm"
         />
-        <Button onClick={onAddGroup} className="flex items-center gap-2">
+        <Button 
+          onClick={onAddGroup} 
+          className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white"
+        >
           <PlusCircle className="h-4 w-4" />
           <span>Add Group</span>
         </Button>

@@ -1,5 +1,10 @@
-import { TestGroup } from "@/components/test-groups/data-table"
 
+
+export type TestGroup = {
+  id: string
+  name: string
+  itemCount: number
+}
 export const TestGroups: TestGroup[] = [
   {
     id: "1",

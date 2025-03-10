@@ -43,6 +43,11 @@ const navItems = [
     name: "Settings",
     href: "/settings",
     icon: Settings
+  },
+  {
+    name: "demo",
+    href: "/reports",
+    icon: Settings
   }
 ];
 

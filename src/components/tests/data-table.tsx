@@ -66,7 +66,10 @@ export function DataTable({ data, onAddTest }: DataTableProps) {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-sm"
         />
-        <Button onClick={onAddTest} className="flex items-center gap-2">
+        <Button 
+          onClick={onAddTest} 
+          className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white"
+        >
           <PlusCircle className="h-4 w-4" />
           <span>Add Test</span>
         </Button>
