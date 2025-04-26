@@ -1,6 +1,18 @@
 "use client"
-
-import { useState } from "react"
+import * as React from "react"
+import { Button } from "@/components/ui/button";
+import { Check, Filter, X } from "lucide-react";
+import {
+    ColumnDef,
+    ColumnFiltersState,
+    SortingState,
+    flexRender,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    useReactTable,
+  } from "@tanstack/react-table"
 import {
   Table,
   TableBody,
@@ -9,106 +21,174 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Test } from "@/data/tests"
-import { PlusCircle } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 
-interface DataTableProps {
-  data: Test[]
-  onAddTest: () => void
+import { Input } from "@/components/ui/input"
+
+interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[]
+  data: TData[]
 }
 
-export function DataTable({ data, onAddTest }: DataTableProps) {
-  const [searchQuery, setSearchQuery] = useState("")
-  
-  // Filter data based on search query
-  const filteredData = data.filter((test) => {
-    const searchString = searchQuery.toLowerCase()
-    return (
-      test.name.toLowerCase().includes(searchString)
-    )
+export function DataTable<TData, TValue>({
+  columns,
+  data,
+}: DataTableProps<TData, TValue>) {
+  const [searchQuery, setSearchQuery] = React.useState("")
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [rowSelection, setRowSelection] = React.useState({})
+
+  const onSearch = React.useCallback((value: string) => {
+    setSearchQuery(value);
+  }, []);
+
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    onColumnFiltersChange: setColumnFilters,
+    getFilteredRowModel: getFilteredRowModel(),
+    onRowSelectionChange: setRowSelection,
+    getPaginationRowModel: getPaginationRowModel(),
+    state: {
+      columnFilters,
+      rowSelection,
+      globalFilter: searchQuery,
+    },
+    onGlobalFilterChange: setSearchQuery,
+    globalFilterFn: "includesString",
   })
-
-  // Get status badge color based on status
-  const getStatusColor = (status: Test["status"]) => {
-    switch(status) {
-      case "running":
-        return "success"
-      case "completed":
-        return "default"
-      case "paused":
-        return "secondary"
-      case "planned":
-        return "outline"
-      default:
-        return "default"
-    }
-  }
-
-  // Format date to more readable format
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Input
-          placeholder="Search by test name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-sm"
-        />
-        <Button 
-          onClick={onAddTest} 
-          className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white"
-        >
-          <PlusCircle className="h-4 w-4" />
-          <span>Add Test</span>
-        </Button>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between py-4">
+          <Input
+            placeholder="Search by test name..."
+            value={searchQuery}
+            onChange={(e) => onSearch(e.target.value)}
+            className="max-w-sm rounded-lg"
+          />
+          {/* <Button 
+            onClick={onAddPriceTest} 
+            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>Add Test</span>
+          </Button> */}
+        </div>
       </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Test Name</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredData.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={3} className="h-24 text-center">
-                  No results found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredData.map((test) => (
-                <TableRow key={test.id}>
-                  <TableCell className="font-medium">{test.name}</TableCell>
-                  <TableCell>{formatDate(test.startDate)}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusColor(test.status) as any}>
-                      {test.status}
-                    </Badge>
+      {/* Custom built table */}
+      <div>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    )
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                    No results.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+          <div className="flex items-center justify-between py-4">
+            <span className="text-sm text-muted-foreground">
+              Showing <strong>{table.getPaginationRowModel().rows.length} </strong> of <strong>{data.length}</strong> tests
+            </span>
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
+                <p className="text-sm font-medium">Rows per page</p>
+                <select 
+                  value={table.getState().pagination.pageSize}
+                  onChange={e => {
+                    table.setPageSize(Number(e.target.value))
+                  }}
+                  className="h-8 w-16 rounded-md border border-input bg-background px-2"
+                >
+                  {[10, 20, 30, 40, 50].map(pageSize => (
+                    <option key={pageSize} value={pageSize}>
+                      {pageSize}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => table.setPageIndex(0)}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <span className="sr-only">Go to first page</span>
+                  <span>{"<<"}</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <span className="sr-only">Go to previous page</span>
+                  <span>{"<"}</span>
+                </Button>
+                <span className="text-sm">
+                  Page {table.getState().pagination.pageIndex + 1} of{" "}
+                  {table.getPageCount()}
+                </span>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <span className="sr-only">Go to next page</span>
+                  <span>{">"}</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <span className="sr-only">Go to last page</span>
+                  <span>{">>"}</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="text-sm text-muted-foreground">
-        Showing {filteredData.length} of {data.length} tests
-      </div>
-    </div>
-  )
-} 
+    )
+  }
