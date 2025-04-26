@@ -19,7 +19,7 @@ export type Product = {
       accessorKey: "asin",
       header: "ASIN",
       cell: ({ row }) => (
-        <a href={`https://www.amazon.com/dp/${row.original.asin}`} 
+        <a href={`https://www.amazon.de/dp/${row.original.asin}`} 
            target="_blank" 
            rel="noopener noreferrer"
            className="text-blue-600 hover:underline"

@@ -13,10 +13,12 @@ import {
   X,
   Package,
   FolderTree,
-  FlaskConical
+  FlaskConical,
+  LogOut
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./button";
+import LogoutButton from "@/components/logout-button";
 
 const navItems = [
   {
@@ -81,7 +83,7 @@ export function Sidebar() {
             Test Analytics
           </Link>
         </div>
-        <nav className="flex flex-col gap-1 p-4 pt-6">
+        <nav className="flex flex-col gap-1 p-4 pt-6 flex-grow">
           {navItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             const Icon = item.icon;
@@ -103,6 +105,14 @@ export function Sidebar() {
             );
           })}
         </nav>
+        
+        {/* Logout Button */}
+        <div className="border-t p-4">
+          <div className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground">
+            <LogOut className="h-5 w-5" />
+            <LogoutButton variant="ghost" className="m-0 p-0 h-auto font-medium" />
+          </div>
+        </div>
       </aside>
     </>
   );

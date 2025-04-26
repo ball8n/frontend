@@ -91,24 +91,24 @@ export const dashboardData: TestData = {
     },
     test2: {
       total_sales: {
-        test: 1502.35,
+        test: 1327.99,
         control: 1859.5,
-        delta: -19.2
+        delta: -28.5
       },
       total_units: {
-        test: 38,
+        test: 35,
         control: 50,
-        delta: -24
+        delta: -30
       },
       total_cm: {
-        test: 278.0,
+        test: 251.2,
         control: 322.42,
-        delta: -13.8
+        delta: -22.08
       },
       avg_price: {
-        test: 39.53,
+        test: 38.99,
         control: 38.24,
-        delta: 3.37
+        delta: 1.96
       }
     },
     test3: {
@@ -168,20 +168,20 @@ export const dashboardData: TestData = {
     { date: "2025-03-02", units: 1, sales: 35.99, test_period: "test1" },
 
     // Test 2 Period (Mar 11 - Mar 24)
-    { date: "2025-03-11", units: 3, sales: 120.97, test_period: "test2" },
-    { date: "2025-03-12", units: 4, sales: 155.96, test_period: "test2" },
-    { date: "2025-03-13", units: 2, sales: 82.98, test_period: "test2" },
-    { date: "2025-03-14", units: 5, sales: 195.95, test_period: "test2" },
-    { date: "2025-03-15", units: 3, sales: 115.97, test_period: "test2" },
-    { date: "2025-03-16", units: 1, sales: 45.99, test_period: "test2" },
-    { date: "2025-03-17", units: 4, sales: 160.96, test_period: "test2" },
-    { date: "2025-03-18", units: 2, sales: 75.98, test_period: "test2" },
-    { date: "2025-03-19", units: 3, sales: 125.97, test_period: "test2" },
-    { date: "2025-03-20", units: 5, sales: 190.95, test_period: "test2" },
-    { date: "2025-03-21", units: 2, sales: 85.98, test_period: "test2" },
-    { date: "2025-03-22", units: 4, sales: 165.96, test_period: "test2" },
-    { date: "2025-03-23", units: 3, sales: 110.97, test_period: "test2" },
-    { date: "2025-03-24", units: 4, sales: 170.96, test_period: "test2" },
+    { date: "2025-03-11", units: 3, sales: 111.97, test_period: "test2" },
+    { date: "2025-03-12", units: 6, sales: 227.94, test_period: "test2" },
+    { date: "2025-03-13", units: 1, sales: 35.99, test_period: "test2" },
+    { date: "2025-03-14", units: 1, sales: 35.99, test_period: "test2" },
+    { date: "2025-03-15", units: 1, sales: 35.99, test_period: "test2" },
+    { date: "2025-03-16", units: 2, sales: 79.98, test_period: "test2" },
+    { date: "2025-03-17", units: 2, sales: 75.98, test_period: "test2" },
+    { date: "2025-03-18", units: 2, sales: 79.98, test_period: "test2" },
+    { date: "2025-03-19", units: 1, sales: 39.99, test_period: "test2" },
+    { date: "2025-03-20", units: 2, sales: 75.98, test_period: "test2" },
+    { date: "2025-03-21", units: 2, sales: 71.98, test_period: "test2" },
+    { date: "2025-03-22", units: 0, sales: 0.00, test_period: "test2" },
+    { date: "2025-03-23", units: 8, sales: 303.92, test_period: "test2" },
+    { date: "2025-03-24", units: 4, sales: 152.30, test_period: "test2" },
 
     // Test 3 Period (Mar 26 - Apr 9)
     { date: "2025-03-26", units: 5, sales: 200.95, test_period: "test3" },
@@ -215,9 +215,9 @@ export const dashboardData: TestData = {
           cm: 112.2
         },
         test2: {
-          units: 18,
-          sales: 680.4,
-          cm: 108.5
+          units: 17,
+          sales: 611.83,
+          cm: 104.72
         },
         test3: {
           units: 22,
@@ -240,9 +240,9 @@ export const dashboardData: TestData = {
           cm: 31.11
         },
         test2: {
-          units: 5,
-          sales: 210.5,
-          cm: 45.2
+          units: 4,
+          sales: 159.96,
+          cm: 41.48
         },
         test3: {
           units: 4,
@@ -265,9 +265,9 @@ export const dashboardData: TestData = {
           cm: 21.6
         },
         test2: {
-          units: 8,
-          sales: 320.4,
-          cm: 68.5
+          units: 12,
+          sales: 479.88,
+          cm: 86.4
         },
         test3: {
           units: 10,
@@ -290,9 +290,9 @@ export const dashboardData: TestData = {
           cm: 37.2
         },
         test2: {
-          units: 7,
-          sales: 290.5,
-          cm: 55.8
+          units: 2,
+          sales: 76.32,
+          cm: 18.6
         },
         test3: {
           units: 8,
@@ -309,14 +309,14 @@ export const dashboardData: TestData = {
         name: "Blocher Glasses Price Test 1",
         status: "Completed",
         objective: "Determine higher prices for Blocher Glasses improve profits",
-        confidence: 95,
+        confidence: 0,
         period: "Feb 17, 2025 - Mar 02, 2025"
       },
       test2: {
         name: "Blocher Glasses Price Test 2",
         status: "Completed",
         objective: "Validate price elasticity with adjusted pricing strategy",
-        confidence: 92,
+        confidence: 0,
         period: "Mar 11, 2025 - Mar 24, 2025"
       },
       test3: {
@@ -324,7 +324,7 @@ export const dashboardData: TestData = {
         status: "In Progress",
         objective: "Fine-tune pricing strategy based on previous test results",
         confidence: 88,
-        period: "Mar 26, 2025 - Apr 09, 2025"
+        period: "Apr, 01 2025 - Apr 14, 2025"
       }
     }
   }
