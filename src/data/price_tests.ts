@@ -1,4 +1,14 @@
-import { PriceTest } from "@/components/tests/columns";
+// Export the PriceTest type
+export type PriceTest = {
+  id: string;
+  name: string;
+  startDate: string; // Keep as string if data source is string
+  endDate: string;   // Keep as string if data source is string
+  status: "completed" | "running" | "planned" | "paused";
+  // Add optional fields for future use if needed
+  // testGroupId?: string;
+  // priceData?: any[]; // Define a proper type later
+};
 
 export const tests: PriceTest[] = [
   {
