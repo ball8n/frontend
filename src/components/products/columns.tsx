@@ -3,24 +3,24 @@ import { Checkbox } from "@/components/ui/checkbox"
 
 export type Product = {
     id: string;
-    sku: string;
+    seller_sku: string;
     asin: string;
-    name: string;
+    item_name: string;
     price: number;
-    status: "active" | "inactive";
+    status: "Active" | "Inactive";
   }
-  
+
   export const columns: ColumnDef<Product>[] = [
     {
-      accessorKey: "sku",
+      accessorKey: "seller_sku",
       header: "SKU",
     },
     {
       accessorKey: "asin",
       header: "ASIN",
       cell: ({ row }) => (
-        <a href={`https://www.amazon.de/dp/${row.original.asin}`} 
-           target="_blank" 
+        <a href={`https://www.amazon.de/dp/${row.original.asin}`}
+           target="_blank"
            rel="noopener noreferrer"
            className="text-blue-600 hover:underline"
            onClick={(e) => e.stopPropagation()}
@@ -30,7 +30,7 @@ export type Product = {
       ),
     },
     {
-      accessorKey: "name",
+      accessorKey: "item_name",
       header: "Item Name",
     },
     {
@@ -42,7 +42,7 @@ export type Product = {
       header: "Status",
       cell: ({ row }) => (
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          row.original.status === 'active' 
+          row.original.status === 'Active' 
             ? 'bg-green-100 text-green-800' 
             : 'bg-gray-100 text-gray-800'
         }`}>

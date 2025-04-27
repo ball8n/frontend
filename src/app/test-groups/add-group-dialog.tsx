@@ -33,27 +33,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-// Define the Product type directly
-export type Product = {
-  id: string;
-  sku: string;
-  asin: string;
-  name: string;
-  price: number;
-  status: "active" | "inactive";
-}
+import { Product } from "@/components/products/columns";
 
 interface AddGroupDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddGroup: (groupName: string, products: Product[]) => void;
+  onAddGroup: (groupName: string, productIds: string[]) => void;
 }
 
 // Create a DataTable component to use in the dialog
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  onSelectedProductsChange: (products: Product[]) => void
+  onSelectedProductsChange: (productIds: string[]) => void
 }
 
 function ProductDataTable<TData, TValue>({
@@ -106,11 +98,11 @@ function ProductDataTable<TData, TValue>({
 
   // Update the parent component when selection changes
   useEffect(() => {
-    const selectedProducts = table.getFilteredRowModel().rows
+    const selectedProductIds = table.getFilteredRowModel().rows
       .filter(row => row.getIsSelected())
-      .map(row => row.original) as Product[];
+      .map(row => (row.original as Product).id);
     
-    onSelectedProductsChange(selectedProducts);
+    onSelectedProductsChange(selectedProductIds);
   }, [rowSelection, table, onSelectedProductsChange]);
 
   // Filter to show only selected items
@@ -221,7 +213,7 @@ function ProductDataTable<TData, TValue>({
 
 export function AddGroupDialog({ open, onOpenChange, onAddGroup }: AddGroupDialogProps) {
   const [groupName, setGroupName] = useState("");
-  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
 
   // Reset form when dialog opens
   useEffect(() => {
@@ -235,6 +227,26 @@ export function AddGroupDialog({ open, onOpenChange, onAddGroup }: AddGroupDialo
     onAddGroup(groupName, selectedProducts);
     onOpenChange(false);
   };
+
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/products/');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        console.log(result);
+        setData(result);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // Define columns for the table
   const columns = useMemo<ColumnDef<Product>[]>(
@@ -281,20 +293,20 @@ export function AddGroupDialog({ open, onOpenChange, onAddGroup }: AddGroupDialo
         ),
       },
       {
-        accessorKey: "name",
+        accessorKey: "item_name",
         header: "Item Name",
       },
       {
         accessorKey: "price",
         header: "Price",
-        cell: ({ row }) => `€${row.original.price.toFixed(2)}`,
+        // cell: ({ row }) => `€${row.original.price.toFixed(2)}`,
       },
       {
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => (
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            row.original.status === 'active' 
+            row.original.status === 'Active' 
               ? 'bg-green-100 text-green-800' 
               : 'bg-gray-100 text-gray-800'
           }`}>
@@ -332,7 +344,7 @@ export function AddGroupDialog({ open, onOpenChange, onAddGroup }: AddGroupDialo
           <div className="mt-2">
             <ProductDataTable 
               columns={columns} 
-              data={products}
+              data={data}
               onSelectedProductsChange={setSelectedProducts}
             />
           </div>

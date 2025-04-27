@@ -1,36 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppShell from '@/components/app-shell';
 import { DataTable } from '@/components/test-groups/data-table';
 import { TestGroups } from '@/data/test_groups';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { Product } from '@/components/products/data-table';
+import { Product } from '@/components/products/columns';
 import { AddGroupDialog } from './add-group-dialog';
 
 export default function TestGroupsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [testGroups, setTestGroups] = useState(TestGroups);
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/price-test-groups/');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        console.log(result);
+        setData(result);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleAddGroup = () => {
     setIsDialogOpen(true);
   };
 
-  const handleCreateGroup = (groupName: string, selectedProducts: Product[]) => {
-    // Create a new group with the selected products
-    const newGroup = {
-      id: `group-${Date.now()}`,
+  const handleCreateGroup = async (groupName: string, selectedProductIds: string[]) => {
+    // Prepare the data payload for the API
+    const newGroupPayload = {
       name: groupName,
-      description: `Group containing ${selectedProducts.length} products`,
-      productCount: selectedProducts.length,
-      lastUpdated: new Date().toISOString(),
-      products: selectedProducts
+      items: selectedProductIds // Use product IDs
     };
-    
-    // Add the new group to the test groups
-    setTestGroups([...testGroups, newGroup]);
+
+    console.log("Sending new group to API:", newGroupPayload);
+
+    try {
+      const response = await fetch('/api/price-test-groups/', { // Use the proxied API path
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newGroupPayload),
+      });
+
+      if (!response.ok) {
+        // Handle API errors (e.g., log error, show message to user)
+        const errorData = await response.json().catch(() => ({})); // Try to get error details
+        console.error(`API Error: ${response.status} ${response.statusText}`, errorData);
+        // Maybe show an error toast/message to the user here
+        throw new Error('Failed to create test group via API');
+      }
+
+      // Optionally, get the created group from the response if the API returns it
+      const createdGroup = await response.json(); 
+      console.log("API Response (created group):", createdGroup);
+
+      // Add the new group (returned from API or constructed locally) to the test groups state
+      // If the API returns the full group object, use that:
+      // setTestGroups([...testGroups, createdGroup]);
+      // Or, if the API just confirms success, you might need to construct the object:
+      // setTestGroups([...testGroups, { ...newGroupPayload, id: createdGroup.id /* or generate locally */, products: selectedProductIds }]);
+
+    } catch (error) {
+      console.error("Error creating test group:", error);
+      // Handle network errors or errors during JSON parsing
+      // Show an error message to the user
+    }
   };
 
   return (
@@ -53,7 +99,7 @@ export default function TestGroupsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="px-6">
-            <DataTable data={testGroups} onAddGroup={handleAddGroup} />
+            <DataTable data={data} onAddGroup={handleAddGroup} />
           </CardContent>
         </Card>
 

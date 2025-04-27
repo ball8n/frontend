@@ -1,59 +1,65 @@
 
+import { TestGroup } from "@/components/test-groups/columns"
 
-export type TestGroup = {
-  id: string
-  name: string
-  itemCount: number
-}
 export const TestGroups: TestGroup[] = [
   {
     id: "1",
     name: "Electronics Bundle",
-    itemCount: 8
+    count: 8,
+    is_active: true
   },
   {
     id: "2",
     name: "Audio Products",
-    itemCount: 5
+    count: 5,
+    is_active: true
   },
   {
     id: "3",
     name: "Computer Accessories",
-    itemCount: 12
+    count: 12,
+    is_active: true
   },
   {
     id: "4",
     name: "Summer Sale Items",
-    itemCount: 15
+    count: 15,
+    is_active: true,
   },
   {
     id: "5",
     name: "Kitchen Essentials",
-    itemCount: 7
+    count: 7,
+    is_active: true
   },
   {
     id: "6",
     name: "Smart Home Devices",
-    itemCount: 9
+    count: 9,
+    is_active: true
   },
   {
     id: "7",
     name: "Gaming Peripherals",
-    itemCount: 11
+    count: 11,
+    is_active: true
   },
   {
     id: "8",
     name: "Mobile Accessories",
-    itemCount: 14
+    count: 14,
+    is_active: true
   },
   {
     id: "9",
     name: "Office Supplies",
-    itemCount: 6
+    count: 6,
+    is_active: true
   },
   {
     id: "10",
     name: "Bestsellers",
-    itemCount: 20
+    count: 20,
+    is_active: true
   }
 ] 

@@ -1,14 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Product } from "@/components/products/columns"
 
-export type Product = {
-    id: string;
-    sku: string;
-    asin: string;
-    name: string;
-    price: number;
-    status: "active" | "inactive";
-  }
   
   export const columns: ColumnDef<Product>[] = [
     {
@@ -34,7 +27,7 @@ export type Product = {
         enableHiding: false,
       },
     {
-      accessorKey: "sku",
+      accessorKey: "seller_sku",
       header: "SKU",
     },
     {
@@ -52,7 +45,7 @@ export type Product = {
       ),
     },
     {
-      accessorKey: "name",
+      accessorKey: "item_name",
       header: "Item Name",
     },
     {
