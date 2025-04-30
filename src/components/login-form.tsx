@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Cookies from 'js-cookie';
-import { verifyCredentials } from "@/data/auth";
+import { getAuth, signInWithEmailAndPassword, AuthError } from "firebase/auth";
+import { app } from "@/lib/firebase";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -17,23 +18,38 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    const auth = getAuth(app);
 
-    // Check credentials against auth file
-    if (verifyCredentials(email, password)) {
-      // Set authentication cookie
-      Cookies.set('isAuthenticated', 'true', { expires: 7 }); // Expires in 7 days
+    try {
+      const x = await signInWithEmailAndPassword(auth, email, password);
+      console.log(x);
+
+      Cookies.set('isAuthenticated', 'true', { expires: 7 });
       
-      // Also set in localStorage as backup for client-side checks
       localStorage.setItem("isAuthenticated", "true");
       
-      // Redirect to dashboard
       router.push("/dashboard");
-    } else {
-      setError("Invalid email or password");
+
+    } catch (error) {
+      const firebaseError = error as AuthError;
+      console.error("Firebase Auth Error:", firebaseError.code, firebaseError.message);
+      
+      switch (firebaseError.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          setError("Invalid email or password.");
+          break;
+        case 'auth/invalid-email':
+          setError("Please enter a valid email address.");
+          break;
+        default:
+          setError("An unexpected error occurred during login. Please try again.");
+      }
       setIsLoading(false);
     }
   };
@@ -79,11 +95,6 @@ export default function LoginForm() {
           </Button>
         </form>
       </CardContent>
-      <CardFooter className="flex justify-center">
-        <p className="text-sm text-muted-foreground">
-          Test credentials: ryan@balloon.de / berlin
-        </p>
-      </CardFooter>
     </Card>
   );
 } 
