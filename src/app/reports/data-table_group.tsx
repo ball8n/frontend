@@ -30,6 +30,17 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
 }
  
+/**
+ * Displays a customizable, interactive data table with filtering and row selection.
+ *
+ * Renders tabular data using configurable columns, supporting search input, column filtering, and row selection. Includes UI controls for toggling the display of selected rows and clearing selections. The table adapts to the provided data and columns, and displays a summary of selected versus filtered rows.
+ *
+ * @template TData - The type of each data row.
+ * @template TValue - The type of values used in column definitions.
+ *
+ * @param columns - Array of column definitions for rendering and configuring the table.
+ * @param data - Array of data objects to display in the table.
+ */
 export function DataTable<TData, TValue>({
   columns,
   data,

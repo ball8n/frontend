@@ -12,10 +12,11 @@ export const validCredentials: Credentials[] = [
 ];
 
 /**
- * Verify if the provided credentials are valid
- * @param email User email
- * @param password User password
- * @returns Boolean indicating if credentials are valid
+ * Checks whether the given email and password match any valid credentials.
+ *
+ * @param email - The email address to verify.
+ * @param password - The password to verify.
+ * @returns True if the credentials are valid; otherwise, false.
  */
 export function verifyCredentials(email: string, password: string): boolean {
   return validCredentials.some(

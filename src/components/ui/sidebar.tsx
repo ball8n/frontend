@@ -53,6 +53,11 @@ const navItems = [
   }
 ];
 
+/**
+ * Renders a responsive navigation sidebar with navigation links and a logout option.
+ *
+ * The sidebar highlights the active route, adapts to mobile and desktop layouts, and includes a logout button at the bottom.
+ */
 export function Sidebar() {
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);

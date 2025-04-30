@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// This function can be marked `async` if using `await` inside
+/**
+ * Middleware that enforces authentication for protected routes.
+ *
+ * Allows requests to proceed if targeting the login page or API routes. For all other routes, checks for an `isAuthenticated` cookie; if absent, redirects the user to the login page.
+ *
+ * @param request - The incoming Next.js request object.
+ * @returns A response that either allows the request to continue or redirects to the login page.
+ */
 export function middleware(request: NextRequest) {
   // Skip middleware for the login page and API routes
   if (

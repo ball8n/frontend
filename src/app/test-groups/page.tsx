@@ -10,6 +10,13 @@ import { PlusCircle } from "lucide-react";
 import { Product } from '@/components/products/columns';
 import { AddGroupDialog } from './add-group-dialog';
 
+/**
+ * Displays and manages product test groups, allowing users to view, create, and organize groups via an interactive interface.
+ *
+ * Fetches test group data from the API on mount and provides functionality to add new groups through a dialog. Integrates with external UI components for layout, data display, and dialog management.
+ *
+ * @remark Errors during data fetching or group creation are logged to the console but are not surfaced in the UI.
+ */
 export default function TestGroupsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [data, setData] = useState([]);

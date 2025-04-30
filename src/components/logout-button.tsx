@@ -10,6 +10,15 @@ interface LogoutButtonProps {
   className?: string;
 }
 
+/**
+ * Renders a logout button that clears authentication data and redirects to the login page.
+ *
+ * Removes the `isAuthenticated` flag from both cookies and local storage before navigating to `/login`.
+ *
+ * @param variant - Optional button style variant.
+ * @param size - Optional button size.
+ * @param className - Optional additional CSS class names.
+ */
 export default function LogoutButton({ 
   variant = "ghost", 
   size = "sm", 

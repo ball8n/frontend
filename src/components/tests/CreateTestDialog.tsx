@@ -73,6 +73,15 @@ interface CreateTestDialogProps {
   onCreateTest: (name: string, startDate: Date, endDate: Date, testGroupId: string, prices: ProductPriceInfo[]) => void;
 }
 
+/**
+ * Displays a two-step modal dialog for creating a price test with product pricing details.
+ *
+ * Allows users to enter test information, select a test group, specify start and end dates, review generated products, edit control and test prices, and submit the test data.
+ *
+ * @param open - Whether the dialog is visible.
+ * @param onOpenChange - Callback invoked when the dialog's open state changes.
+ * @param onCreateTest - Callback invoked with test details and product price updates upon successful submission.
+ */
 export function CreateTestDialog({ open, onOpenChange, onCreateTest }: CreateTestDialogProps) {
   const [currentPage, setCurrentPage] = React.useState<1 | 2>(1); // State for current page
   const [testName, setTestName] = React.useState("");

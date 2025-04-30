@@ -36,6 +36,15 @@ const ASIN_COLORS = [
   "#d9d9d9"
 ];
 
+/**
+ * Renders an interactive dashboard for comparing multiple test periods against a control period using sales, units, and contribution margin metrics.
+ *
+ * Displays group information, allows selection of up to three test periods, and visualizes comparisons through metric cards, line charts, bar charts, and pie charts. All visualizations update dynamically based on selected test periods and chosen metric.
+ *
+ * @param groupId - Identifier for the test group to display.
+ *
+ * @remark At least one test period must remain selected at all times, and a maximum of three test periods can be selected simultaneously.
+ */
 export default function Dashboard({ groupId }: DashboardProps) {
   const [comparisonMetric, setComparisonMetric] = useState<"units" | "sales">("units");
   const [selectedTestPeriods, setSelectedTestPeriods] = useState<string[]>(["test1"]);

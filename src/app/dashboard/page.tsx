@@ -20,6 +20,11 @@ const TEST_GROUPS = [
   { id: "blocher", name: "Blocher Glasses Group" }
 ];
 
+/**
+ * Renders the test analysis dashboard page with a selectable test group.
+ *
+ * Displays a dropdown to choose a test group and conditionally renders the dashboard for the selected group. If no group is selected, shows a prompt to select one.
+ */
 export default function DashboardPage() {
   const [selectedGroup, setSelectedGroup] = useState(TEST_GROUPS[0].id);
 

@@ -3,6 +3,11 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+/**
+ * Redirects users from the home page to the login page and displays a loading message during the transition.
+ *
+ * @returns A loading UI while redirecting to the login page.
+ */
 export default function HomePage() {
   const router = useRouter();
 

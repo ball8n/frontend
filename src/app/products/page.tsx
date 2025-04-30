@@ -6,6 +6,12 @@ import { DataTable } from '@/components/products/data-table';
 import { columns } from '@/components/products/columns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+/**
+ * Displays the product inventory page, fetching and rendering a list of products in a data table.
+ *
+ * @remark
+ * Product data is fetched from the `/api/products/` endpoint on component mount. If the fetch fails, errors are logged to the console but not displayed in the UI.
+ */
 export default function ProductsPage() {
   const [data, setData] = useState([]);
 

@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import LoginForm from "@/components/login-form";
 import Cookies from 'js-cookie';
 
+/**
+ * Renders the login page and redirects authenticated users to the dashboard.
+ *
+ * Displays a centered login form with a header and subtitle. If the user is already authenticated, automatically navigates to the dashboard.
+ */
 export default function LoginPage() {
   const router = useRouter();
 

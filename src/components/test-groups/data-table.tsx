@@ -19,6 +19,14 @@ interface DataTableProps {
   onAddGroup: () => void
 }
 
+/**
+ * Displays a searchable and interactive table of test groups with an option to add new groups.
+ *
+ * Filters groups by name based on user input and shows the number of items in each group. Provides a button to trigger group addition and displays a summary of visible versus total groups.
+ *
+ * @param data - The list of test groups to display.
+ * @param onAddGroup - Callback invoked when the "Add Group" button is clicked.
+ */
 export function DataTable({ data, onAddGroup }: DataTableProps) {
   const [searchQuery, setSearchQuery] = useState("")
   

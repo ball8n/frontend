@@ -29,7 +29,16 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
 }
 
-export function DataTable<TData, TValue>({
+/**
+   * Renders a generic, interactive data table with search, filtering, sorting, row selection, and pagination.
+   *
+   * @param columns - Column definitions describing the structure and rendering of each table column.
+   * @param data - Array of data objects to display in the table.
+   *
+   * @remarks
+   * The table supports global search, column filtering, dynamic columns, and customizable page size. If no rows match the current filters or search, a "No results." message is shown.
+   */
+  export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {

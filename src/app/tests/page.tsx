@@ -19,6 +19,11 @@ type ProductPriceInfo = {
     testPrice: number | null;
 }
 
+/**
+ * Displays and manages a list of price tests, allowing users to create new tests and view existing ones.
+ *
+ * Renders a page with a table of current price tests and a dialog for creating new tests. Newly created tests are added to the list and displayed in the table.
+ */
 export default function TestsPage() {
   const [tests, setTests] = useState<PriceTest[]>(initialTestsData);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);

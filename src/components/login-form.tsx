@@ -10,6 +10,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import Cookies from 'js-cookie';
 import { verifyCredentials } from "@/data/auth";
 
+/**
+ * Renders a login form that authenticates users and redirects to the dashboard on success.
+ *
+ * Displays input fields for email and password, handles credential verification, and manages authentication state using cookies and localStorage. Shows error messages for invalid credentials and disables the submit button during authentication.
+ */
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

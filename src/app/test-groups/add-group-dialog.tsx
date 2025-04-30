@@ -48,6 +48,18 @@ interface DataTableProps<TData, TValue> {
   onSelectedProductsChange: (productIds: string[]) => void
 }
 
+/**
+ * Displays a searchable, filterable, paginated, and selectable table of products.
+ *
+ * Allows users to search by SKU, ASIN, or name, filter to show only selected products, and select multiple rows. Notifies the parent component of the currently selected product IDs whenever the selection changes.
+ *
+ * @param columns - Column definitions for the table.
+ * @param data - Array of product data to display.
+ * @param onSelectedProductsChange - Callback invoked with the IDs of selected products when the selection changes.
+ *
+ * @remark
+ * When "Show Selected" is enabled, only selected rows are displayed and all others are deselected.
+ */
 function ProductDataTable<TData, TValue>({
   columns,
   data,
@@ -211,6 +223,15 @@ function ProductDataTable<TData, TValue>({
   );
 }
 
+/**
+ * Displays a modal dialog for creating a new test group by entering a group name and selecting products.
+ *
+ * The dialog fetches product data from the API, allows searching and selecting multiple products, and requires a non-empty group name before submission. On submit, it calls the provided callback with the group name and selected product IDs, then closes the dialog.
+ *
+ * @param open - Controls whether the dialog is visible.
+ * @param onOpenChange - Callback to open or close the dialog.
+ * @param onAddGroup - Callback invoked with the group name and selected product IDs when the group is created.
+ */
 export function AddGroupDialog({ open, onOpenChange, onAddGroup }: AddGroupDialogProps) {
   const [groupName, setGroupName] = useState("");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
