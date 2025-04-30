@@ -14,6 +14,10 @@ export type Product = {
     {
       accessorKey: "seller_sku",
       header: "SKU",
+      meta: {
+        filterable: true,
+        filterType: 'string',
+      }
     },
     {
       accessorKey: "asin",
@@ -28,14 +32,26 @@ export type Product = {
           {row.original.asin}
         </a>
       ),
+      meta: {
+        filterable: true,
+        filterType: 'string',
+      }
     },
     {
       accessorKey: "item_name",
       header: "Item Name",
+      meta: {
+        filterable: true,
+        filterType: 'string',
+      }
     },
     {
       accessorKey: "price",
       header: "Price",
+      meta: {
+        filterable: true,
+        filterType: 'number',
+      }
     },
     {
       accessorKey: "status",
@@ -49,5 +65,10 @@ export type Product = {
           {row.original.status}
         </span>
       ),
+      meta: {
+        filterable: true,
+        filterType: 'select',
+        filterOptions: ['Active', 'Inactive'],
+      }
     },
   ]
