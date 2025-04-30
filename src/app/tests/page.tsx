@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import AppShell from '@/components/app-shell';
-import { DataTable } from '@/components/tests/data-table';
+import { DataTable } from '@/components/data-table/data-table';
 import { tests as initialTestsData } from '@/data/price_tests';
-import { PriceTest } from '@/data/price_tests';
-import { columns } from '@/components/tests/columns';
+import { PriceTest, priceTestColumns } from '@/components/data-table/columns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -62,12 +61,14 @@ export default function TestsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Tests Management</CardTitle>
+            
             <CardDescription>
               View and manage your price tests.
             </CardDescription>
+            
           </CardHeader>
           <CardContent>
-            <DataTable data={tests} columns={columns} />
+            <DataTable data={tests} columns={priceTestColumns} />
           </CardContent>
         </Card>
       </div>

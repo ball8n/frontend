@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/app-shell';
-import { DataTable } from '@/components/products/data-table';
-import { columns } from '@/components/products/columns';
+import { DataTable } from '@/components/data-table/data-table';
+import { productColumns } from '@/components/data-table/columns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ProductsPage() {
@@ -41,7 +41,7 @@ export default function ProductsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-          <DataTable columns={columns} data={data} />
+          <DataTable columns={productColumns} data={data} />
           </CardContent>
         </Card>
       </div>

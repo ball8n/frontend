@@ -33,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { Product } from "@/components/products/columns";
+import { Product } from "@/components/data-table/columns";
 
 interface AddGroupDialogProps {
   open: boolean;
