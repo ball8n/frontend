@@ -3,28 +3,32 @@
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/app-shell';
 import { DataTable } from '@/components/data-table/data-table';
-import { productColumns } from '@/components/data-table/columns';
+import { Product, productColumns } from '@/components/data-table/columns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { fetchProducts } from '@/lib/api';
 
 export default function ProductsPage() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const response = await fetch('/api/products/');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
-        console.log(result);
+        const result = await fetchProducts();
         setData(result);
-      } catch (error) {
-        console.error("Failed to fetch products:", error);
+      } catch (err) {
+        console.error("Failed to fetch products:", err);
+        setError(err instanceof Error ? err.message : "An unknown error occurred");
+        setData([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchData();
+    loadData();
   }, []);
 
   return (
@@ -41,7 +45,11 @@ export default function ProductsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-          <DataTable columns={productColumns} data={data} />
+            {loading && <p>Loading products...</p>}
+            {error && <p className="text-red-500">Error: {error}</p>}
+            {!loading && !error && (
+              <DataTable columns={productColumns} data={data} />
+            )}
           </CardContent>
         </Card>
       </div>

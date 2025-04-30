@@ -3,34 +3,36 @@
 import { useEffect, useState } from "react";
 import AppShell from '@/components/app-shell';
 import { DataTable } from '@/components/data-table/data-table';
-import { testGroupColumns } from '@/components/data-table/columns';
-import { TestGroups } from '@/data/test_groups';
+import { TestGroup, testGroupColumns } from '@/components/data-table/columns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { Product } from '@/components/data-table/columns';
 import { AddGroupDialog } from './add-group-dialog';
+import { fetchTestGroups, createTestGroup } from '@/lib/api';
 
 export default function TestGroupsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<TestGroup[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await fetchTestGroups();
+      setData(result);
+    } catch (err) {
+      console.error("Failed to fetch test groups:", err);
+      setError(err instanceof Error ? err.message : "An unknown error occurred");
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/api/price-test-groups/');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
-        console.log(result);
-        setData(result);
-      } catch (error) {
-        console.error("Failed to fetch products:", error);
-      }
-    };
-
-    fetchData();
+    loadData();
   }, []);
 
   const handleAddGroup = () => {
@@ -38,45 +40,14 @@ export default function TestGroupsPage() {
   };
 
   const handleCreateGroup = async (groupName: string, selectedProductIds: string[]) => {
-    // Prepare the data payload for the API
-    const newGroupPayload = {
-      name: groupName,
-      items: selectedProductIds // Use product IDs
-    };
-
-    console.log("Sending new group to API:", newGroupPayload);
-
+    console.log("Creating new group with:", { groupName, selectedProductIds });
     try {
-      const response = await fetch('/api/price-test-groups/', { // Use the proxied API path
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newGroupPayload),
-      });
-
-      if (!response.ok) {
-        // Handle API errors (e.g., log error, show message to user)
-        const errorData = await response.json().catch(() => ({})); // Try to get error details
-        console.error(`API Error: ${response.status} ${response.statusText}`, errorData);
-        // Maybe show an error toast/message to the user here
-        throw new Error('Failed to create test group via API');
-      }
-
-      // Optionally, get the created group from the response if the API returns it
-      const createdGroup = await response.json(); 
+      const createdGroup = await createTestGroup(groupName, selectedProductIds);
       console.log("API Response (created group):", createdGroup);
-
-      // Add the new group (returned from API or constructed locally) to the test groups state
-      // If the API returns the full group object, use that:
-      // setTestGroups([...testGroups, createdGroup]);
-      // Or, if the API just confirms success, you might need to construct the object:
-      // setTestGroups([...testGroups, { ...newGroupPayload, id: createdGroup.id /* or generate locally */, products: selectedProductIds }]);
-
+      await loadData();
     } catch (error) {
       console.error("Error creating test group:", error);
-      // Handle network errors or errors during JSON parsing
-      // Show an error message to the user
+      alert(`Failed to create group: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   };
 
@@ -109,7 +80,11 @@ export default function TestGroupsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="px-6">
-            <DataTable data={data} columns={testGroupColumns} />
+            {loading && <p>Loading test groups...</p>}
+            {error && <p className="text-red-500">Error: {error}</p>}
+            {!loading && !error && (
+              <DataTable data={data} columns={testGroupColumns} />
+            )}
           </CardContent>
         </Card>
 

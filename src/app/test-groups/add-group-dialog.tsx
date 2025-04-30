@@ -18,6 +18,7 @@ import { Product } from "@/components/data-table/columns";
 import {
   ColumnDef,
 } from "@tanstack/react-table";
+import { fetchProducts } from "@/lib/api";
 
 interface AddGroupDialogProps {
   open: boolean;
@@ -29,6 +30,8 @@ export function AddGroupDialog({ open, onOpenChange, onAddGroup }: AddGroupDialo
   const [groupName, setGroupName] = useState("");
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [productsData, setProductsData] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [productError, setProductError] = useState<string | null>(null);
 
   const dialogProductColumns = useMemo<ColumnDef<Product>[]>(() => [
     { accessorKey: "seller_sku", header: "SKU", meta: { filterable: true, filterType: 'string' } },
@@ -37,26 +40,22 @@ export function AddGroupDialog({ open, onOpenChange, onAddGroup }: AddGroupDialo
   ], []);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadProducts = async () => {
+      setLoadingProducts(true);
+      setProductError(null);
       try {
-        const response = await fetch('/api/products/');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
-        setProductsData(result as Product[]);
+        const result = await fetchProducts();
+        setProductsData(result);
       } catch (error) {
         console.error("Failed to fetch products for dialog:", error);
+        setProductError(error instanceof Error ? error.message : "Failed to load products");
         setProductsData([]);
+      } finally {
+        setLoadingProducts(false);
       }
     };
     if (open) {
-      fetchData();
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) {
+      loadProducts();
       setGroupName("");
       setSelectedProductIds([]);
     }
@@ -95,12 +94,16 @@ export function AddGroupDialog({ open, onOpenChange, onAddGroup }: AddGroupDialo
         <div className="my-4">
           <Label>Select Products</Label>
           <div className="mt-2">
-            <DataTable 
-              columns={dialogProductColumns} 
-              data={productsData} 
-              enableRowSelection={true}
-              onSelectionChange={handleSelectionChange}
-            />
+            {loadingProducts && <p>Loading products...</p>}
+            {productError && <p className="text-red-500">Error: {productError}</p>}
+            {!loadingProducts && !productError && (
+              <DataTable 
+                columns={dialogProductColumns} 
+                data={productsData} 
+                enableRowSelection={true}
+                onSelectionChange={handleSelectionChange}
+              />
+            )}
           </div>
         </div>
 
