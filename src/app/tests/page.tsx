@@ -8,7 +8,7 @@ import { PriceTest, priceTestColumns } from '@/components/data-table/columns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { CreateTestDialog } from "@/components/tests/CreateTestDialog";
+import { CreateTestDialog } from "@/app/tests/CreateTestDialog";
 
 // Import the PriceInfo type (assuming it's exported or defined accessible)
 // If not exported from CreateTestDialog, might need to define it here or in a shared types file.

@@ -37,7 +37,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { TestGroup, TestGroups } from "@/data/test_groups"
+import { TestGroup } from "@/components/data-table/columns"
+import { TestGroups } from "@/data/test_groups"
 
 // Define a dummy Product type
 type Product = {

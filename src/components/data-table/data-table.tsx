@@ -6,6 +6,7 @@ import {
     ColumnDef,
     ColumnFiltersState,
     SortingState,
+    RowSelectionState,
     flexRender,
     getCoreRowModel,
     getFilteredRowModel,
@@ -14,6 +15,7 @@ import {
     getFacetedUniqueValues,
     useReactTable,
     Column,
+    Row,
   } from "@tanstack/react-table"
 import {
   Table,
@@ -62,7 +64,33 @@ type ColumnMetaWithOptions = ColumnMeta & { headerName: string };
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  enableRowSelection?: boolean
+  onSelectionChange?: (selectedRows: TData[]) => void
 }
+
+// Define the select column definition generically
+const selectColumnDef = <TData,>(): ColumnDef<TData> => ({
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+        className="translate-y-[2px]"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+        className="translate-y-[2px]"
+        onClick={(e) => e.stopPropagation()} // Prevent row click if row itself is clickable
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+});
 
 // Filter component to render in the header
 // function FilterInput<TData, TValue>({ column }: { column: Column<TData, TValue> }) { ... }
@@ -70,29 +98,54 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
+  enableRowSelection = false,
+  onSelectionChange,
 }: DataTableProps<TData, TValue>) {
+    // Rename internal state back to regular names
     const [searchQuery, setSearchQuery] = React.useState("")
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-    const [rowSelection, setRowSelection] = React.useState({})
-
-    // --- State for configuring a NEW filter --- 
+    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]) 
+    const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({}) 
+    // Filter config state remains the same
     const [newFilterColumnId, setNewFilterColumnId] = React.useState<string>("")
-    // Store the meta of the selected column for easy access
     const [selectedColumnMeta, setSelectedColumnMeta] = React.useState<ColumnMetaWithOptions | null>(null);
-    // State for the value input, adapted for different types
     const [newStringValue, setNewStringValue] = React.useState<string>("");
     const [newNumberMin, setNewNumberMin] = React.useState<string>("");
     const [newNumberMax, setNewNumberMax] = React.useState<string>("");
     const [newSelectValues, setNewSelectValues] = React.useState<string[]>([]); 
-    // --- End New Filter State --- 
-
     const [activeFilters, setActiveFilters] = React.useState<ActiveFilter[]>([])
     
+    const tableColumns = React.useMemo(() => 
+        enableRowSelection ? [selectColumnDef<TData>(), ...columns] : columns,
+    [columns, enableRowSelection]);
+
+    // Always create and use the internal table instance
+    const table = useReactTable({
+      data,
+      columns: tableColumns, 
+      state: { 
+          columnFilters, // Use direct state 
+          rowSelection,    // Use direct state
+          globalFilter: searchQuery // Use direct state
+      },
+      onColumnFiltersChange: setColumnFilters, // Set direct state
+      onRowSelectionChange: setRowSelection,    // Set direct state
+      onGlobalFilterChange: setSearchQuery,   // Set direct state
+      // Other options remain the same
+      getCoreRowModel: getCoreRowModel(),
+      getFilteredRowModel: getFilteredRowModel(), 
+      getPaginationRowModel: getPaginationRowModel(),
+      getFacetedUniqueValues: getFacetedUniqueValues(),
+      globalFilterFn: "includesString",
+      filterFns: { /* ... */ },
+      enableMultiRowSelection: enableRowSelection, 
+    })
+
+    // Memoize filterable columns based on the potentially passed columns
     const filterableColumns = React.useMemo(() => 
-      columns.filter(col => 
+      tableColumns.filter(col => 
         'accessorKey' in col && (col.meta as ColumnMeta)?.filterable
       ),
-      [columns]
+      [tableColumns]
     );
 
     const columnIdToMetaMap = React.useMemo(() => {
@@ -120,6 +173,7 @@ export function DataTable<TData, TValue>({
       setNewSelectValues([]);
     }, [newFilterColumnId, columnIdToMetaMap]);
 
+    // Sync activeFilters with the table's columnFilters state
     React.useEffect(() => {
       const tableFilters = activeFilters.map(f => {
         let filterValue: any;
@@ -132,8 +186,14 @@ export function DataTable<TData, TValue>({
         }
         return { id: f.id, value: filterValue };
       });
+      // Always set the internal columnFilters state
       setColumnFilters(tableFilters);
-    }, [activeFilters]);
+    }, [activeFilters]); // Remove tableInstance dependency
+
+    // Global search handler (always updates internal state)
+    const onSearch = React.useCallback((value: string) => {
+      setSearchQuery(value);
+    }, []); // Remove tableInstance dependency
 
     const handleAddFilter = () => {
       if (!newFilterColumnId || !selectedColumnMeta?.headerName) return;
@@ -200,110 +260,94 @@ export function DataTable<TData, TValue>({
       setNewFilterColumnId(""); 
     }
 
-    const onSearch = React.useCallback((value: string) => {
-      setSearchQuery(value);
-    }, []);
+    // Helper to render the correct input based on selected column type
+    const renderFilterInput = () => {
+       if (!selectedColumnMeta) return null;
+   
+       switch (selectedColumnMeta.filterType) {
+         case 'number':
+           return (
+             <div className="flex items-center space-x-1">
+               <Input
+                 type="number"
+                 placeholder="Min"
+                 value={newNumberMin}
+                 onChange={(e) => setNewNumberMin(e.target.value)}
+                 className="max-w-[80px] rounded-lg h-9"
+               />
+               <span className="text-muted-foreground">-</span>
+               <Input
+                 type="number"
+                 placeholder="Max"
+                 value={newNumberMax}
+                 onChange={(e) => setNewNumberMax(e.target.value)}
+                 className="max-w-[80px] rounded-lg h-9"
+               />
+             </div>
+           );
+         case 'select':
+           const options = selectedColumnMeta.filterOptions || [];
+           // Use table.getColumn(newFilterColumnId)?.getFacetedUniqueValues() for dynamic options
+           return (
+             <div className="flex flex-wrap gap-x-3 gap-y-1 p-1 border rounded-md max-w-xs">
+               {options.map(option => (
+                 <div key={option} className="flex items-center space-x-1">
+                   <Checkbox
+                     id={`filter-${newFilterColumnId}-${option}`}
+                     checked={newSelectValues.includes(option)}
+                     onCheckedChange={(checked) => {
+                       setNewSelectValues(prev => 
+                         checked 
+                           ? [...prev, option] 
+                           : prev.filter(item => item !== option)
+                       );
+                     }}
+                   />
+                   <Label htmlFor={`filter-${newFilterColumnId}-${option}`} className="text-sm font-normal">
+                     {option}
+                   </Label>
+                 </div>
+               ))}
+             </div>
+           );
+         case 'string':
+         default:
+           return (
+             <Input
+               placeholder="Filter value..."
+               value={newStringValue}
+               onChange={(e) => setNewStringValue(e.target.value)}
+               className="max-w-sm rounded-lg h-9"
+             />
+           );
+       }
+     };
 
-    const table = useReactTable({
-      data,
-      columns,
-      state: { columnFilters, rowSelection, globalFilter: searchQuery },
-      onColumnFiltersChange: setColumnFilters, // Connect state
-      getCoreRowModel: getCoreRowModel(),
-      getFilteredRowModel: getFilteredRowModel(), // Needed for column filtering
-      getPaginationRowModel: getPaginationRowModel(),
-      getFacetedUniqueValues: getFacetedUniqueValues(), // Needed for select options potentially
-      onRowSelectionChange: setRowSelection,
-      onGlobalFilterChange: setSearchQuery,
-      globalFilterFn: "includesString",
-      // Define filter functions for different types
-      filterFns: {
-        // Override default string filter if needed, e.g., for case-insensitivity
-        // stringFilter: (row, columnId, value) => { ... },
-        // TanStack Table has built-in range and array filters
-        // We rely on setting the value structure correctly in useEffect
-      },
-    })
-    
-     // Helper to render the correct input based on selected column type
-     const renderFilterInput = () => {
-        if (!selectedColumnMeta) return null;
-    
-        switch (selectedColumnMeta.filterType) {
-          case 'number':
-            return (
-              <div className="flex items-center space-x-1">
-                <Input
-                  type="number"
-                  placeholder="Min"
-                  value={newNumberMin}
-                  onChange={(e) => setNewNumberMin(e.target.value)}
-                  className="max-w-[80px] rounded-lg h-9"
-                />
-                <span className="text-muted-foreground">-</span>
-                <Input
-                  type="number"
-                  placeholder="Max"
-                  value={newNumberMax}
-                  onChange={(e) => setNewNumberMax(e.target.value)}
-                  className="max-w-[80px] rounded-lg h-9"
-                />
-              </div>
-            );
-          case 'select':
-            const options = selectedColumnMeta.filterOptions || [];
-            // Use table.getColumn(newFilterColumnId)?.getFacetedUniqueValues() for dynamic options
-            return (
-              <div className="flex flex-wrap gap-x-3 gap-y-1 p-1 border rounded-md max-w-xs">
-                {options.map(option => (
-                  <div key={option} className="flex items-center space-x-1">
-                    <Checkbox
-                      id={`filter-${newFilterColumnId}-${option}`}
-                      checked={newSelectValues.includes(option)}
-                      onCheckedChange={(checked) => {
-                        setNewSelectValues(prev => 
-                          checked 
-                            ? [...prev, option] 
-                            : prev.filter(item => item !== option)
-                        );
-                      }}
-                    />
-                    <Label htmlFor={`filter-${newFilterColumnId}-${option}`} className="text-sm font-normal">
-                      {option}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            );
-          case 'string':
-          default:
-            return (
-              <Input
-                placeholder="Filter value..."
-                value={newStringValue}
-                onChange={(e) => setNewStringValue(e.target.value)}
-                className="max-w-sm rounded-lg h-9"
-              />
-            );
-        }
-      };
+    // Helper to format filter value for display in badges
+    const formatFilterValueForDisplay = (filter: ActiveFilter): string => {
+      switch (filter.type) {
+        case 'number':
+          const { min, max } = filter.value as { min?: number; max?: number };
+          if (min !== undefined && max !== undefined) return `${min} - ${max}`;
+          if (min !== undefined) return `>= ${min}`;
+          if (max !== undefined) return `<= ${max}`;
+          return "Invalid range";
+        case 'select':
+          return (filter.value as string[]).join(', ');
+        case 'string':
+        default:
+          return `"${filter.value as string}"`;
+      }
+    };
 
-      // Helper to format filter value for display in badges
-      const formatFilterValueForDisplay = (filter: ActiveFilter): string => {
-        switch (filter.type) {
-          case 'number':
-            const { min, max } = filter.value as { min?: number; max?: number };
-            if (min !== undefined && max !== undefined) return `${min} - ${max}`;
-            if (min !== undefined) return `>= ${min}`;
-            if (max !== undefined) return `<= ${max}`;
-            return "Invalid range";
-          case 'select':
-            return (filter.value as string[]).join(', ');
-          case 'string':
-          default:
-            return `"${filter.value as string}"`;
-        }
-      };
+    // Effect to call the onSelectionChange callback when internal selection changes
+    React.useEffect(() => {
+      if (onSelectionChange) {
+        const selectedRowsData = table.getFilteredSelectedRowModel().rows.map(row => row.original);
+        onSelectionChange(selectedRowsData);
+      }
+      // Add table dependency if getFilteredSelectedRowModel might change with table instance
+    }, [rowSelection, onSelectionChange, table]); 
 
   return (
     <div className="space-y-4">
@@ -427,8 +471,16 @@ export function DataTable<TData, TValue>({
          </Table>
         </div>
          <div className="flex items-center justify-between py-4">
+            <div className="text-sm text-muted-foreground flex-1">
+               {enableRowSelection && (
+                  <>
+                  {table.getFilteredSelectedRowModel().rows.length} of{" "}
+                  {table.getFilteredRowModel().rows.length} row(s) selected.
+                  </>
+               )}
+            </div>
             <span className="text-sm text-muted-foreground">
-              Showing <strong>{table.getPaginationRowModel().rows.length} </strong> of <strong>{data.length}</strong> products
+              Showing <strong>{table.getPaginationRowModel().rows.length} </strong> of <strong>{table.getRowCount()}</strong> rows {/* Use getRowCount for total potential rows */}
             </span>
 
             <div className="flex items-center space-x-2">

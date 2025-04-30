@@ -1,7 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { PriceTest } from "@/data/price_tests"
 
 export type Product = {
     id: string;

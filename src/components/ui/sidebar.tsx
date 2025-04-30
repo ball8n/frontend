@@ -46,11 +46,6 @@ const navItems = [
     href: "/settings",
     icon: Settings
   },
-  {
-    name: "demo",
-    href: "/reports",
-    icon: Settings
-  }
 ];
 
 export function Sidebar() {

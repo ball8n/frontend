@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import AppShell from '@/components/app-shell';
-import { DataTable } from '@/components/test-groups/data-table';
+import { DataTable } from '@/components/data-table/data-table';
+import { testGroupColumns } from '@/components/data-table/columns';
 import { TestGroups } from '@/data/test_groups';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { Product } from '@/components/products/columns';
+import { Product } from '@/components/data-table/columns';
 import { AddGroupDialog } from './add-group-dialog';
 
 export default function TestGroupsPage() {
@@ -89,6 +90,15 @@ export default function TestGroupsPage() {
               Create and manage product test groups for your campaigns.
             </p>
           </div>
+          <div>
+            <Button 
+              onClick={handleAddGroup} 
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              <PlusCircle className="h-4 w-4" />
+              <span>Add Group</span>
+            </Button>
+          </div>
         </div>
 
         <Card className="border rounded-xl">
@@ -99,7 +109,7 @@ export default function TestGroupsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="px-6">
-            <DataTable data={data} onAddGroup={handleAddGroup} />
+            <DataTable data={data} columns={testGroupColumns} />
           </CardContent>
         </Card>
 
