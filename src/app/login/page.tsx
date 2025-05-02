@@ -10,10 +10,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     // Check if user is already authenticated
-    const isAuthenticatedCookie = Cookies.get('isAuthenticated');
-    const isAuthenticatedStorage = localStorage.getItem("isAuthenticated");
+    const isAuthenticated = Cookies.get('isAuthenticated');
     
-    if (isAuthenticatedCookie === "true" || isAuthenticatedStorage === "true") {
+    if (isAuthenticated === "true") {
       router.push("/dashboard");
     }
   }, [router]);

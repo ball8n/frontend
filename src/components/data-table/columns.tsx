@@ -81,7 +81,7 @@ export type Product = {
   export type TestGroup = {
     id: string;
     name: string;
-    count: number; 
+    count: number;
   }
   
   export const testGroupColumns: ColumnDef<TestGroup>[] = [

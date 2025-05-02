@@ -25,11 +25,12 @@ export default function LoginForm() {
     // Check credentials against auth file
     if (verifyCredentials(email, password)) {
       // Set authentication cookie
-      Cookies.set('isAuthenticated', 'true', { expires: 7 }); // Expires in 7 days
-      
-      // Also set in localStorage as backup for client-side checks
-      localStorage.setItem("isAuthenticated", "true");
-      
+      Cookies.set('isAuthenticated', 'true', { 
+           expires: 7,
+           sameSite: 'strict', // Helps prevent CSRF
+           secure: process.env.NODE_ENV === 'production' // HTTPS only in production
+         }); // Expires in 7 days
+
       // Redirect to dashboard
       router.push("/dashboard");
     } else {
