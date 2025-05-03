@@ -1,9 +1,18 @@
 // src/lib/api.ts
 
 // Import types directly
-import { Product, TestGroup } from "@/components/data-table/columns"; 
+import { Product, TestGroup, PriceTest } from "@/components/data-table/columns"; 
+import { app } from "./firebase";
+import { getAuth } from "firebase/auth";
+const API_BASE_URL = "http://localhost:4200"; // Assuming API routes are relative to the app's origin
 
-const API_BASE_URL = ""; // Assuming API routes are relative to the app's origin
+
+async function getAuthToken(): Promise<string | null> {
+    // Logic to get Firebase ID token or other auth token
+    const user = getAuth(app).currentUser;
+    return user ? await user.getIdToken() : null;
+    return null;  
+}
 
 // Helper function for handling API responses
 async function handleResponse<T>(response: Response): Promise<T> {
@@ -20,13 +29,20 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-// --- Product API Calls --- 
+// --- Product API Calls ---
 
 /**
  * Fetches the list of products.
  */
 export async function fetchProducts(): Promise<Product[]> {
-  const response = await fetch(`${API_BASE_URL}/api/products/`);
+  const response = await fetch(`${API_BASE_URL}/products/`,{
+    method: 'GET',
+    headers: {
+      // Add Authorization header if needed, e.g.:
+      'Authorization': `Bearer ${await getAuthToken()}`
+    },
+  });
+
   return handleResponse<Product[]>(response);
 }
 
@@ -36,7 +52,13 @@ export async function fetchProducts(): Promise<Product[]> {
  * Fetches the list of price test groups.
  */
 export async function fetchTestGroups(): Promise<TestGroup[]> {
-  const response = await fetch(`${API_BASE_URL}/api/price-test-groups/`);
+  const response = await fetch(`${API_BASE_URL}/price-test-groups/`,{
+    method: 'GET',
+    headers: {
+      // Add Authorization header if needed, e.g.:
+      'Authorization': `Bearer ${await getAuthToken()}`
+    },
+  });
   return handleResponse<TestGroup[]>(response);
 }
 
@@ -52,12 +74,45 @@ export async function createTestGroup(groupName: string, productIds: string[]): 
     items: productIds,
   };
 
-  const response = await fetch(`${API_BASE_URL}/api/price-test-groups/`, {
+  const response = await fetch(`${API_BASE_URL}/price-test-groups/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       // Add Authorization header if needed, e.g.:
-      // 'Authorization': `Bearer ${await getAuthToken()}` 
+      'Authorization': `Bearer ${await getAuthToken()}` 
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse<any>(response); // Adjust return type based on API response
+}
+
+
+export async function fetchPriceTest(): Promise<PriceTest[]> {
+  const response = await fetch(`${API_BASE_URL}/price-test/`,{
+    method: 'GET',
+    headers: {
+      // Add Authorization header if needed, e.g.:
+      'Authorization': `Bearer ${await getAuthToken()}`
+    },
+  });
+  return handleResponse<PriceTest[]>(response);
+}
+
+export async function createPriceTest(groupId: string, priceTestName: string,startDate: string,endDate: string ): Promise<any> { // Adjust return type based on API
+  const payload = {
+    group: groupId,
+    name: priceTestName,
+    start_date: startDate,
+    end_date: endDate,
+  };
+
+  const response = await fetch(`${API_BASE_URL}/price-test/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      // Add Authorization header if needed, e.g.:
+      'Authorization': `Bearer ${await getAuthToken()}`
     },
     body: JSON.stringify(payload),
   });
