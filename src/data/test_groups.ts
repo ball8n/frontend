@@ -1,54 +1,63 @@
-import { TestGroup } from "@/components/test-groups/data-table"
+
+import { TestGroup } from "@/components/data-table/columns"
 
 export const TestGroups: TestGroup[] = [
   {
     id: "1",
     name: "Electronics Bundle",
-    itemCount: 8
+    count: 8,
+
   },
   {
     id: "2",
     name: "Audio Products",
-    itemCount: 5
+    count: 5,
+
   },
   {
     id: "3",
     name: "Computer Accessories",
-    itemCount: 12
+    count: 12,
+
   },
   {
     id: "4",
     name: "Summer Sale Items",
-    itemCount: 15
+    count: 15,
   },
   {
     id: "5",
     name: "Kitchen Essentials",
-    itemCount: 7
+    count: 7,
   },
   {
     id: "6",
     name: "Smart Home Devices",
-    itemCount: 9
+    count: 9,
+
   },
   {
     id: "7",
     name: "Gaming Peripherals",
-    itemCount: 11
+    count: 11,
+
   },
   {
     id: "8",
     name: "Mobile Accessories",
-    itemCount: 14
+    count: 14,
+
   },
   {
     id: "9",
     name: "Office Supplies",
-    itemCount: 6
+    count: 6,
+    
   },
   {
     id: "10",
     name: "Bestsellers",
-    itemCount: 20
+    count: 20,
+
   }
 ] 

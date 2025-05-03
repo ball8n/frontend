@@ -1,100 +1,100 @@
-import { Product } from "@/components/products/data-table"
+import { Product } from "@/components/data-table/data-table"
 
 export const products: Product[] = [
   {
     id: "1",
-    sku: "SKU001",
+    seller_sku: "SKU001",
     asin: "B07X8JLFT9",
-    name: "Wireless Bluetooth Headphones",
+    item_name: "Wireless Bluetooth Headphones",
     price: 79.99,
-    status: "active"
+    status: "Active"
   },
   {
     id: "2",
-    sku: "SKU002",
+    seller_sku: "SKU002",
     asin: "B08N5KWB9H",
-    name: "4K Ultra HD Smart TV - 55 inch",
+    item_name: "4K Ultra HD Smart TV - 55 inch",
     price: 499.99,
-    status: "active"
+    status: "Active"
   },
   {
     id: "3",
-    sku: "SKU003",
+    seller_sku: "SKU003",
     asin: "B07PQYFR8Z",
-    name: "Portable Bluetooth Speaker",
+    item_name: "Portable Bluetooth Speaker",
     price: 39.99,
-    status: "inactive"
+    status: "Inactive"
   },
   {
     id: "4",
-    sku: "SKU004",
+    seller_sku: "SKU004",
     asin: "B08F2YWFN3",
-    name: "Mechanical Gaming Keyboard",
+    item_name: "Mechanical Gaming Keyboard",
     price: 129.99,
-    status: "active"
+    status: "Active"
   },
   {
     id: "5",
-    sku: "SKU005",
+    seller_sku: "SKU005",
     asin: "B07V4R3FB4",
-    name: "Wireless Gaming Mouse",
+    item_name: "Wireless Gaming Mouse",
     price: 59.99,
-    status: "active"
+    status: "Active"
   },
   {
     id: "6",
-    sku: "SKU006",
+    seller_sku: "SKU006",
     asin: "B083BNP18K",
-    name: "USB-C Fast Charger",
+    item_name: "USB-C Fast Charger",
     price: 24.99,
-    status: "inactive"
+    status: "Inactive"
   },
   {
     id: "7",
-    sku: "SKU007",
+    seller_sku: "SKU007",
     asin: "B07ZPKBL9V",
-    name: "Ultrawide Gaming Monitor - 34 inch",
+    item_name: "Ultrawide Gaming Monitor - 34 inch",
     price: 349.99,
-    status: "active"
+    status: "Active"
   },
   {
     id: "8",
-    sku: "SKU008",
+    seller_sku: "SKU008",
     asin: "B081QWRMPQ",
-    name: "Smartphone Stand and Wireless Charger",
+    item_name: "Smartphone Stand and Wireless Charger",
     price: 34.99,
-    status: "active"
+    status: "Active"
   },
   {
     id: "9",
-    sku: "SKU009",
+    seller_sku: "SKU009",
     asin: "B07YFF3JCN",
-    name: "Smart Home Speaker with Voice Assistant",
+    item_name: "Smart Home Speaker with Voice Assistant",
     price: 89.99,
-    status: "active"
+    status: "Active"
   },
   {
     id: "10",
-    sku: "SKU010",
+    seller_sku: "SKU010",
     asin: "B082VKQWMY",
-    name: "Fitness Tracker with Heart Rate Monitor",
+    item_name: "Fitness Tracker with Heart Rate Monitor",
     price: 49.99,
-    status: "inactive"
+    status: "Inactive"
   },
   {
     id: "11",
-    sku: "SKU011",
+    seller_sku: "SKU011",
     asin: "B08CZBK6PP",
-    name: "Noise Cancelling True Wireless Earbuds",
+    item_name: "Noise Cancelling True Wireless Earbuds",
     price: 129.99,
-    status: "active"
+    status: "Active"
   },
   {
     id: "12",
-    sku: "SKU012",
+    seller_sku: "SKU012",
     asin: "B086B8KBHY",
-    name: "Portable SSD - 1TB",
+    item_name: "Portable SSD - 1TB",
     price: 149.99,
-    status: "active"
+    status: "Active"
   }
-] 
+]
