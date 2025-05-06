@@ -8,7 +8,7 @@ import { PriceTest, priceTestColumns } from '@/components/data-table/columns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { addTestDialog } from "@/app/tests/add-test-dialog";
+import { AddTestDialog } from "./add-test-dialog";
 import { createPriceTest, fetchPriceTest } from "@/lib/api";
 // Import the PriceInfo type (assuming it's exported or defined accessible)
 // If not exported from CreateTestDialog, might need to define it here or in a shared types file.
@@ -48,9 +48,9 @@ export default function TestsPage() {
 
 
   // Update handleCreateTest to accept the prices array
-  const handleCreateTest = async (groupId: string, priceTestName: string,startDate: string,endDate: string ): Promise<any> => { // Adjust return type based on API
+  const handleCreateTest = async (priceTestName: string, groupId: string, startDate: Date,endDate: Date, items: string[] ): Promise<any> => { // Adjust return type based on API
     try {
-      const createdPriceTest = await createPriceTest(groupId, priceTestName,startDate,endDate);
+      const createdPriceTest = await createPriceTest(groupId, priceTestName,startDate,endDate, items);
       console.log("API Response (created price test):", createdPriceTest);
       await loadData();
     } catch (error) {
@@ -93,7 +93,7 @@ export default function TestsPage() {
           </CardContent>
         </Card>
 
-      <addTestDialog
+      <AddTestDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         onAddTest={handleCreateTest}
