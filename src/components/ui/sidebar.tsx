@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,7 @@ import {
 import { useState } from "react";
 import { Button } from "./button";
 import LogoutButton from "@/components/logout-button";
-
+import logo from '@/public/ball8n_yellow_black.png'
 const navItems = [
   {
     name: "Products",
@@ -69,14 +69,15 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col border-r bg-background transition-transform lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col border-r bg-mint transition-transform lg:translate-x-0",
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex h-16 items-center border-b px-6">
-          <Link href="/" className="flex items-center font-bold text-xl">
-            Test Analytics
-          </Link>
+          <Image src={logo} alt="Ball8n" width={64} height={64} />
+          {/* <Link href="/" className="flex items-center font-bold text-xl">
+            Ball8n
+          </Link> */}
         </div>
         <nav className="flex flex-col gap-1 p-4 pt-6 flex-grow">
           {navItems.map((item) => {
