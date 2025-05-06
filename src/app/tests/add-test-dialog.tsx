@@ -49,32 +49,19 @@ type ProductPriceInfo = {
     testPrice: number | null;    // Use number | null for parsed floats
 }
 
-// // Function to generate dummy products based on group
-// const generateDummyProducts = (group: TestGroup | undefined): Product[] => {
-//   if (!group) return [];
-//   const products: Product[] = [];
-//   for (let i = 1; i <= group.itemCount; i++) {
-//     products.push({
-//       id: `${group.id}-${i}`,
-//       name: `Product ${i} (Group: ${group.name})`,
-//       price: Math.floor(Math.random() * 100) + 10, // Random price between 10 and 110
-//     });
-//   }
-//   return products;
-// };
-
-interface addTestDialogProps {
+interface AddTestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddTest: (name: string, startDate: Date, endDate: Date, testGroupId: string, prices: ProductPriceInfo[]) => void;
+  onAddTest: (name: string, testGroupId: string, startDate: Date, endDate: Date, items: string[]) => void;
 }
 
-export function addTestDialog({ open, onOpenChange, onAddTest }: addTestDialogProps) {
+export function AddTestDialog({ open, onOpenChange, onAddTest }: AddTestDialogProps) {
   const [currentPage, setCurrentPage] = React.useState<1 | 2>(1); // State for current page
   const [priceTestName, setPriceTestName] = React.useState("");
   const [startDate, setStartDate] = React.useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = React.useState<Date | undefined>(undefined);
   const [selectedGroupId, setSelectedGroupId] = React.useState<string | undefined>(undefined);
+  const [items, setItems] = React.useState<string[]>([]);
   
   // State for API-fetched test groups
   const [apiTestGroups, setApiTestGroups] = useState<TestGroup[]>([]);
@@ -207,28 +194,29 @@ export function addTestDialog({ open, onOpenChange, onAddTest }: addTestDialogPr
   };
 
   const handleSubmit = () => {
+    setItems(products.map(product => product.id));
     // Validation happens on Page 1 navigation
 
     // Convert string prices from state to numbers for submission
-    const priceUpdates: ProductPriceInfo[] = products.map(product => {
-        const prices = editablePrices[product.id] || { controlPrice: '', testPrice: '' };
+    // const priceUpdates: ProductPriceInfo[] = products.map(product => {
+    //     const prices = editablePrices[product.id] || { controlPrice: '', testPrice: '' };
         
-        const controlPriceString = prices.controlPrice;
-        const testPriceString = prices.testPrice;
+    //     const controlPriceString = prices.controlPrice;
+    //     const testPriceString = prices.testPrice;
 
-        // Parse strings to float, default to null if empty or invalid
-        const controlPriceNum = controlPriceString !== '' ? parseFloat(controlPriceString) : null;
-        const testPriceNum = testPriceString !== '' ? parseFloat(testPriceString) : null;
+    //     // Parse strings to float, default to null if empty or invalid
+    //     const controlPriceNum = controlPriceString !== '' ? parseFloat(controlPriceString) : null;
+    //     const testPriceNum = testPriceString !== '' ? parseFloat(testPriceString) : null;
 
-        return {
-            productId: product.id,
-            controlPrice: (controlPriceNum !== null && !isNaN(controlPriceNum)) ? controlPriceNum : null,
-            testPrice: (testPriceNum !== null && !isNaN(testPriceNum)) ? testPriceNum : null
-        };
-    });
+    //     return {
+    //         productId: product.id,
+    //         controlPrice: (controlPriceNum !== null && !isNaN(controlPriceNum)) ? controlPriceNum : null,
+    //         testPrice: (testPriceNum !== null && !isNaN(testPriceNum)) ? testPriceNum : null
+    //     };
+    // });
 
     // Pass the structured price data along with other test details
-    onAddTest(priceTestName, startDate!, endDate!, selectedGroupId!, priceUpdates);
+    onAddTest(priceTestName, selectedGroupId!, startDate!, endDate!, items);
     onOpenChange(false); // Close dialog
   };
 
@@ -394,7 +382,7 @@ export function addTestDialog({ open, onOpenChange, onAddTest }: addTestDialogPr
                   products.map((product) => (
                     <TableRow key={product.id}>
                       <TableCell className="font-medium">{product.id}</TableCell>
-                      <TableCell>{product.name}</TableCell>
+                      <TableCell>{product.item_name}</TableCell>
                       <TableCell className="text-right">
                         <Input
                           type="number"

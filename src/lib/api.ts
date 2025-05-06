@@ -29,6 +29,14 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+// Helper function to format Date to "yyyy-MM-DD"
+function formatDateToYYYYMMDD(date: Date): string {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0'); // getMonth() is 0-indexed
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // --- Product API Calls ---
 
 /**
@@ -99,12 +107,13 @@ export async function fetchPriceTest(): Promise<PriceTest[]> {
   return handleResponse<PriceTest[]>(response);
 }
 
-export async function createPriceTest(groupId: string, priceTestName: string,startDate: string,endDate: string ): Promise<any> { // Adjust return type based on API
+export async function createPriceTest(groupId: string, priceTestName: string,startDate: Date,endDate: Date, items: string[] ): Promise<any> { // Adjust return type based on API
   const payload = {
-    group: groupId,
     name: priceTestName,
-    start_date: startDate,
-    end_date: endDate,
+    group_id: groupId,
+    start_date: formatDateToYYYYMMDD(startDate),
+    end_date: formatDateToYYYYMMDD(endDate),
+    items: items,
   };
 
   const response = await fetch(`${API_BASE_URL}/price-test/`, {
