@@ -17,7 +17,7 @@ export type Product = {
       header: "SKU",
       meta: {
         filterable: true,
-        filterType: 'string',
+        filterType: "string",
       }
     },
     {
@@ -35,7 +35,7 @@ export type Product = {
       ),
       meta: {
         filterable: true,
-        filterType: 'string',
+        filterType: "string",
       }
     },
     {
@@ -43,7 +43,7 @@ export type Product = {
       header: "Item Name",
       meta: {
         filterable: true,
-        filterType: 'string',
+        filterType: "string",
       }
     },
     {
@@ -51,7 +51,7 @@ export type Product = {
       header: "Price",
       meta: {
         filterable: true,
-        filterType: 'number',
+        filterType: "number",
       }
     },
     {
@@ -59,17 +59,17 @@ export type Product = {
       header: "Status",
       cell: ({ row }) => (
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          row.original.status === 'Active' 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-gray-100 text-gray-800'
+          row.original.status === "Active" 
+            ? "bg-green-100 text-green-800" 
+            : "bg-gray-100 text-gray-800"
         }`}>
           {row.original.status}
         </span>
       ),
       meta: {
         filterable: true,
-        filterType: 'select',
-        filterOptions: ['Active', 'Inactive'],
+        filterType: "select",
+        filterOptions: ["Active", "Inactive"],
       }
     },
   ]
@@ -90,7 +90,7 @@ export type Product = {
       header: "Group Name",
       meta: { // Allow filtering by name
         filterable: true,
-        filterType: 'string',
+        filterType: "string",
       }
     },
     {
@@ -106,9 +106,9 @@ export type Product = {
 export type PriceTest = {
   id: string;
   name: string;
-  startDate: string; // Keep as string if data source is string
-  endDate: string;   // Keep as string if data source is string
-  status: "completed" | "running" | "planned" | "paused";
+  start_date: string; // Keep as string if data source is string
+  end_date: string;   // Keep as string if data source is string
+  status: "completed" | "running" | "paused" | "scheduled" | "cancelled";
   // Add optional fields for future use if needed
   // testGroupId?: string;
   // priceData?: any[]; // Define a proper type later
@@ -122,8 +122,10 @@ const getStatusVariant = (status: PriceTest["status"]): "default" | "secondary" 
       return "default"
     case "paused":
       return "secondary"
-    case "planned":
+    case "scheduled":
       return "outline"
+    case "cancelled":
+      return "destructive"
     default:
       console.warn("Unknown price test status encountered:", status)
       return "default"
@@ -133,12 +135,12 @@ const getStatusVariant = (status: PriceTest["status"]): "default" | "secondary" 
 // Helper function to format date (handle potential invalid dates)
 const formatDate = (dateString: string) => {
   try {
-    const date = new Date(dateString + 'T00:00:00'); 
+    const date = new Date(dateString + "T00:00:00"); 
     if (isNaN(date.getTime())) {
       return "Invalid Date";
     }
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', month: 'short', day: 'numeric'
+    return date.toLocaleDateString("en-US", { 
+      year: "numeric", month: "short", day: "numeric"
     });
   } catch (error) {
     console.error("Error formatting date:", dateString, error);
@@ -155,19 +157,19 @@ export const priceTestColumns: ColumnDef<PriceTest>[] = [
     ),
     meta: { // Add filterable meta if desired
       filterable: true,
-      filterType: 'string',
+      filterType: "string",
     }
   },
   {
-    accessorKey: "startDate",
+    accessorKey: "start_date",
     header: "Start Date",
-    cell: ({ row }) => formatDate(row.original.startDate), 
+    cell: ({ row }) => formatDate(row.original.start_date), 
     // Add meta for date filtering if needed (more complex)
   },
    {
-    accessorKey: "endDate",
+    accessorKey: "end_date",
     header: "End Date",
-    cell: ({ row }) => formatDate(row.original.endDate), 
+    cell: ({ row }) => formatDate(row.original.end_date), 
     // Add meta for date filtering if needed
   },
   {
@@ -183,8 +185,8 @@ export const priceTestColumns: ColumnDef<PriceTest>[] = [
     },
     meta: { // Add meta for select filtering
       filterable: true,
-      filterType: 'select',
-      filterOptions: ['running', 'completed', 'paused', 'planned'], // Use actual statuses
+      filterType: "select",
+      filterOptions: ["running", "completed", "paused", "scheduled", "cancelled"], // Use actual statuses
     }
   },
 ]

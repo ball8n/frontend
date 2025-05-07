@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -38,14 +39,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { TestGroup } from "@/components/data-table/columns"
-import { TestGroups } from "@/data/test_groups"
-
-// Define a dummy Product type
-type Product = {
-  id: string;
-  name: string;
-  price: number; // Base price
-};
+import { fetchTestGroups } from "@/lib/api"
+import { Product } from "@/components/data-table/columns"
 
 // Type for passing price updates
 type ProductPriceInfo = {
@@ -54,32 +49,25 @@ type ProductPriceInfo = {
     testPrice: number | null;    // Use number | null for parsed floats
 }
 
-// Function to generate dummy products based on group
-const generateDummyProducts = (group: TestGroup | undefined): Product[] => {
-  if (!group) return [];
-  const products: Product[] = [];
-  for (let i = 1; i <= group.itemCount; i++) {
-    products.push({
-      id: `${group.id}-${i}`,
-      name: `Product ${i} (Group: ${group.name})`,
-      price: Math.floor(Math.random() * 100) + 10, // Random price between 10 and 110
-    });
-  }
-  return products;
-};
-
-interface CreateTestDialogProps {
+interface AddTestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateTest: (name: string, startDate: Date, endDate: Date, testGroupId: string, prices: ProductPriceInfo[]) => void;
+  onAddTest: (name: string, testGroupId: string, startDate: Date, endDate: Date, items: string[]) => void;
 }
 
-export function CreateTestDialog({ open, onOpenChange, onCreateTest }: CreateTestDialogProps) {
+export function AddTestDialog({ open, onOpenChange, onAddTest }: AddTestDialogProps) {
   const [currentPage, setCurrentPage] = React.useState<1 | 2>(1); // State for current page
-  const [testName, setTestName] = React.useState("");
+  const [priceTestName, setPriceTestName] = React.useState("");
   const [startDate, setStartDate] = React.useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = React.useState<Date | undefined>(undefined);
   const [selectedGroupId, setSelectedGroupId] = React.useState<string | undefined>(undefined);
+  const [items, setItems] = React.useState<string[]>([]);
+  
+  // State for API-fetched test groups
+  const [apiTestGroups, setApiTestGroups] = useState<TestGroup[]>([]);
+  const [groupsLoading, setGroupsLoading] = useState<boolean>(false);
+  const [groupsError, setGroupsError] = useState<string | null>(null);
+  
   const [products, setProducts] = React.useState<Product[]>([]); // State for products
   // State for editable prices: { productId: { controlPrice: string, testPrice: string } }
   const [editablePrices, setEditablePrices] = React.useState<Record<string, { controlPrice: string; testPrice: string }>>({});
@@ -87,7 +75,8 @@ export function CreateTestDialog({ open, onOpenChange, onCreateTest }: CreateTes
   const [dateError, setDateError] = React.useState<string | null>(null);
   const [groupError, setGroupError] = React.useState<string | null>(null);
 
-  const selectedGroup = React.useMemo(() => TestGroups.find(g => g.id === selectedGroupId), [selectedGroupId]);
+  // Use apiTestGroups for selected group lookup
+  const selectedGroup = React.useMemo(() => apiTestGroups.find(g => g.id === selectedGroupId), [selectedGroupId, apiTestGroups]);
 
   // Get the start of today for disabling past dates
   const today = new Date();
@@ -104,7 +93,7 @@ export function CreateTestDialog({ open, onOpenChange, onCreateTest }: CreateTes
     } else {
       // Reset all state on close
       setCurrentPage(1);
-      setTestName("");
+      setPriceTestName("");
       setStartDate(undefined);
       setEndDate(undefined);
       setSelectedGroupId(undefined);
@@ -116,13 +105,37 @@ export function CreateTestDialog({ open, onOpenChange, onCreateTest }: CreateTes
     }
   }, [open]);
 
+  // Fetch test groups when the dialog opens
+  useEffect(() => {
+    if (open) {
+      const loadGroups = async () => {
+        setGroupsLoading(true);
+        setGroupsError(null);
+        try {
+          const groups = await fetchTestGroups();
+          setApiTestGroups(groups);
+        } catch (err) {
+          console.error("Failed to fetch test groups:", err);
+          setGroupsError(err instanceof Error ? err.message : "An unknown error occurred");
+          setApiTestGroups([]); // Clear groups on error
+        } finally {
+          setGroupsLoading(false);
+        }
+      };
+      loadGroups();
+    } else {
+      // Optionally clear groups when closing, or keep cached data
+      // setApiTestGroups([]);
+    }
+  }, [open]);
+
   const validatePage1 = (): boolean => {
     let isValid = true;
     setNameError(null); // Reset errors
     setDateError(null);
     setGroupError(null);
 
-    if (!testName.trim()) {
+    if (!priceTestName.trim()) {
       setNameError("Test name cannot be empty.");
       isValid = false;
     }
@@ -143,13 +156,17 @@ export function CreateTestDialog({ open, onOpenChange, onCreateTest }: CreateTes
 
   const handleNext = () => {
     if (validatePage1()) {
-      const group = TestGroups.find(g => g.id === selectedGroupId);
-      const generatedProducts = generateDummyProducts(group);
-      setProducts(generatedProducts);
+      // Find group from API data
+      const group = apiTestGroups.find(g => g.id === selectedGroupId);
 
-      // Initialize editable prices
+      // TODO: Fetch products based on the selected group (group?.id)
+      // For now, setting products to empty array
+      const fetchedProducts: Product[] = []; // Replace with actual API call
+      setProducts(fetchedProducts);
+
+      // Initialize editable prices based on fetched products
       const initialPrices: Record<string, { controlPrice: string; testPrice: string }> = {};
-      generatedProducts.forEach(p => {
+      fetchedProducts.forEach((p: Product) => { // Explicitly type p as Product
         initialPrices[p.id] = { controlPrice: p.price.toString(), testPrice: '' }; // Control price prefilled, test price empty
       });
       setEditablePrices(initialPrices);
@@ -177,28 +194,29 @@ export function CreateTestDialog({ open, onOpenChange, onCreateTest }: CreateTes
   };
 
   const handleSubmit = () => {
+    setItems(products.map(product => product.id));
     // Validation happens on Page 1 navigation
 
     // Convert string prices from state to numbers for submission
-    const priceUpdates: ProductPriceInfo[] = products.map(product => {
-        const prices = editablePrices[product.id] || { controlPrice: '', testPrice: '' };
+    // const priceUpdates: ProductPriceInfo[] = products.map(product => {
+    //     const prices = editablePrices[product.id] || { controlPrice: '', testPrice: '' };
         
-        const controlPriceString = prices.controlPrice;
-        const testPriceString = prices.testPrice;
+    //     const controlPriceString = prices.controlPrice;
+    //     const testPriceString = prices.testPrice;
 
-        // Parse strings to float, default to null if empty or invalid
-        const controlPriceNum = controlPriceString !== '' ? parseFloat(controlPriceString) : null;
-        const testPriceNum = testPriceString !== '' ? parseFloat(testPriceString) : null;
+    //     // Parse strings to float, default to null if empty or invalid
+    //     const controlPriceNum = controlPriceString !== '' ? parseFloat(controlPriceString) : null;
+    //     const testPriceNum = testPriceString !== '' ? parseFloat(testPriceString) : null;
 
-        return {
-            productId: product.id,
-            controlPrice: (controlPriceNum !== null && !isNaN(controlPriceNum)) ? controlPriceNum : null,
-            testPrice: (testPriceNum !== null && !isNaN(testPriceNum)) ? testPriceNum : null
-        };
-    });
+    //     return {
+    //         productId: product.id,
+    //         controlPrice: (controlPriceNum !== null && !isNaN(controlPriceNum)) ? controlPriceNum : null,
+    //         testPrice: (testPriceNum !== null && !isNaN(testPriceNum)) ? testPriceNum : null
+    //     };
+    // });
 
     // Pass the structured price data along with other test details
-    onCreateTest(testName, startDate!, endDate!, selectedGroupId!, priceUpdates);
+    onAddTest(priceTestName, selectedGroupId!, startDate!, endDate!, items);
     onOpenChange(false); // Close dialog
   };
 
@@ -212,7 +230,7 @@ export function CreateTestDialog({ open, onOpenChange, onCreateTest }: CreateTes
           <DialogDescription>
             {currentPage === 1
               ? "Enter the basic details for your new price test."
-              : `These are the ${selectedGroup?.itemCount ?? 0} products included in the selected test group. Review and click Create Test.`}
+              : `These are the ${selectedGroup?.count ?? 0} products included in the selected test group. Review and click Create Test.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -226,9 +244,9 @@ export function CreateTestDialog({ open, onOpenChange, onCreateTest }: CreateTes
               </Label>
               <Input
                 id="test-name"
-                value={testName}
+                value={priceTestName}
                 onChange={(e) => {
-                  setTestName(e.target.value);
+                  setPriceTestName(e.target.value);
                   if (nameError) setNameError(null); // Clear error on change
                 }}
                 placeholder="e.g., Summer Sale Test"
@@ -253,9 +271,12 @@ export function CreateTestDialog({ open, onOpenChange, onCreateTest }: CreateTes
                   <SelectValue placeholder="Select a test group" />
                 </SelectTrigger>
                 <SelectContent>
-                  {TestGroups.map((group: TestGroup) => (
+                   {groupsLoading && <SelectItem value="loading" disabled>Loading groups...</SelectItem>}
+                   {groupsError && <SelectItem value="error" disabled>Error: {groupsError}</SelectItem>}
+                   {!groupsLoading && !groupsError && apiTestGroups.length === 0 && <SelectItem value="empty" disabled>No test groups found.</SelectItem>}
+                   {!groupsLoading && !groupsError && apiTestGroups.map((group: TestGroup) => (
                     <SelectItem key={group.id} value={group.id}>
-                      {group.name} ({group.itemCount} items)
+                      {group.name} ({group.count} items)
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -361,7 +382,7 @@ export function CreateTestDialog({ open, onOpenChange, onCreateTest }: CreateTes
                   products.map((product) => (
                     <TableRow key={product.id}>
                       <TableCell className="font-medium">{product.id}</TableCell>
-                      <TableCell>{product.name}</TableCell>
+                      <TableCell>{product.item_name}</TableCell>
                       <TableCell className="text-right">
                         <Input
                           type="number"

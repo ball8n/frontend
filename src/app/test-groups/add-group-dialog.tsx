@@ -15,11 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DataTable } from "@/components/data-table/data-table";
 import { Product } from "@/components/data-table/columns";
-import {
-  ColumnDef,
-} from "@tanstack/react-table";
 import { fetchProducts } from "@/lib/api";
-
+import { productColumns } from "@/components/data-table/columns";
 interface AddGroupDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -32,12 +29,6 @@ export function AddGroupDialog({ open, onOpenChange, onAddGroup }: AddGroupDialo
   const [productsData, setProductsData] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productError, setProductError] = useState<string | null>(null);
-
-  const dialogProductColumns = useMemo<ColumnDef<Product>[]>(() => [
-    { accessorKey: "seller_sku", header: "SKU", meta: { filterable: true, filterType: 'string' } },
-    { accessorKey: "asin", header: "ASIN", meta: { filterable: true, filterType: 'string' } },
-    { accessorKey: "item_name", header: "Item Name", meta: { filterable: true, filterType: 'string' } },
-  ], []);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -98,7 +89,7 @@ export function AddGroupDialog({ open, onOpenChange, onAddGroup }: AddGroupDialo
             {productError && <p className="text-red-500">Error: {productError}</p>}
             {!loadingProducts && !productError && (
               <DataTable 
-                columns={dialogProductColumns} 
+                columns={productColumns} 
                 data={productsData} 
                 enableRowSelection={true}
                 onSelectionChange={handleSelectionChange}
