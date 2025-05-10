@@ -2,16 +2,22 @@
 
 // Import types directly
 import { Product, TestGroup, PriceTest } from "@/components/data-table/columns"; 
-import { app } from "./firebase";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 const API_BASE_URL = "http://localhost:4200"; // Assuming API routes are relative to the app's origin
 
+function waitForAuth(): Promise<User | null> {
+  const auth = getAuth();
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe(); // stop listening after first call
+      resolve(user);
+    });
+  });
+}
 
 async function getAuthToken(): Promise<string | null> {
-    // Logic to get Firebase ID token or other auth token
-    const user = getAuth(app).currentUser;
-    return user ? await user.getIdToken() : null;
-    return null;  
+  const user = await waitForAuth();
+  return user ? await user.getIdToken() : null;
 }
 
 // Helper function for handling API responses
@@ -128,13 +134,3 @@ export async function createPriceTest(groupId: string, priceTestName: string,sta
 
   return handleResponse<any>(response); // Adjust return type based on API response
 }
-
-// --- Potentially add other API functions here ---
-
-// Example function to get auth token (implement based on your auth setup)
-// async function getAuthToken(): Promise<string | null> {
-//   // Logic to get Firebase ID token or other auth token
-//   // const user = getAuth(app).currentUser;
-//   // return user ? await user.getIdToken() : null;
-//   return null; 
-// } 
