@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Cookies from 'js-cookie';
-import { getAuth, signInWithEmailAndPassword, AuthError } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, AuthError, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { app } from "@/lib/firebase";
 import { verifyCredentials } from "@/data/auth";
 
@@ -25,17 +25,21 @@ export default function LoginForm() {
     setError("");
     const auth = getAuth(app);
 
-    // Check credentials against auth file
     try {
-      const x = await signInWithEmailAndPassword(auth, email, password);
-      console.log(x);
+      // Set persistence to LOCAL (persists even after browser restart)
+      await setPersistence(auth, browserLocalPersistence);
+      
+      // Sign in user
+      await signInWithEmailAndPassword(auth, email, password);
+      
+      // Set cookie for middleware protection
       Cookies.set('isAuthenticated', 'true', { 
         expires: 7,
-        // sameSite: 'strict', // Helps prevent CSRF
+        sameSite: 'strict', // Helps prevent CSRF
         secure: process.env.NODE_ENV === 'production' // HTTPS only in production
       }); // Expires in 7 days
 
-   // Redirect to dashboard
+      // Redirect to dashboard
       router.push("/dashboard");
     } catch (error) {
       const firebaseError = error as AuthError;
