@@ -38,9 +38,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { TestGroup } from "@/components/data-table/columns"
+import { TestGroup, Product, priceTestDialogColumns } from "@/components/data-table/columns"
 import { fetchTestGroups } from "@/lib/api"
-import { Product } from "@/components/data-table/columns"
+import { DataTable } from "@/components/data-table/data-table"
+import { ColumnDef } from "@tanstack/react-table"
 
 // Type for passing price updates
 type ProductPriceInfo = {
@@ -220,6 +221,15 @@ export function AddTestDialog({ open, onOpenChange, onAddTest }: AddTestDialogPr
     onOpenChange(false); // Close dialog
   };
 
+  // Use priceTestDialogColumns instead of defining columns locally
+  const columns = React.useMemo(() => 
+    priceTestDialogColumns({ 
+      editablePrices, 
+      handlePriceChange 
+    }), 
+    [editablePrices, handlePriceChange]
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl rounded-lg"> {/* Increased width further */}
@@ -362,54 +372,16 @@ export function AddTestDialog({ open, onOpenChange, onAddTest }: AddTestDialogPr
         {/* Page 2 Content */}
          {currentPage === 2 && (
           <div className="py-4 max-h-[500px] overflow-y-auto"> {/* Increased max height */}
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[150px]">Product ID</TableHead>
-                  <TableHead>Product Name</TableHead>
-                  <TableHead className="w-[150px] text-right">Control Price ($)</TableHead> {/* New Column */}
-                  <TableHead className="w-[150px] text-right">Test Price ($)</TableHead>    {/* New Column */}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.length === 0 ? (
-                   <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground"> {/* Updated colSpan */} 
-                        No products found for this group.
-                      </TableCell>
-                    </TableRow>
-                ) : (
-                  products.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">{product.id}</TableCell>
-                      <TableCell>{product.item_name}</TableCell>
-                      <TableCell className="text-right">
-                        <Input
-                          type="number"
-                          value={editablePrices[product.id]?.controlPrice ?? ''}
-                          onChange={(e) => handlePriceChange(product.id, 'controlPrice', e.target.value)}
-                          className="text-right rounded-md h-8"
-                          placeholder="Enter price"
-                           min="0"
-                           step="0.01" // Allows decimal steps
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                         <Input
-                          type="number"
-                          value={editablePrices[product.id]?.testPrice ?? ''}
-                          onChange={(e) => handlePriceChange(product.id, 'testPrice', e.target.value)}
-                          className="text-right rounded-md h-8"
-                          placeholder="Enter price"
-                           min="0"
-                           step="0.01" // Allows decimal steps
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            {products.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                No products found for this group.
+              </div>
+            ) : (
+              <DataTable
+                columns={columns}
+                data={products}
+              />
+            )}
           </div>
         )}
 

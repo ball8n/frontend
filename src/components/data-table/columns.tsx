@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 
 export type Product = {
     id: string;
@@ -190,3 +191,68 @@ export const priceTestColumns: ColumnDef<PriceTest>[] = [
     }
   },
 ]
+
+// ===================================
+// Price Test Dialog Columns
+// ===================================
+export interface PriceTestDialogProps {
+  editablePrices: Record<string, { controlPrice: string; testPrice: string }>;
+  handlePriceChange: (productId: string, priceType: 'controlPrice' | 'testPrice', value: string) => void;
+}
+
+export const priceTestDialogColumns = (
+  { editablePrices, handlePriceChange }: PriceTestDialogProps
+): ColumnDef<Product>[] => [
+  {
+    accessorKey: "id",
+    header: "Product ID",
+    meta: {
+      filterable: true,
+      filterType: 'string'
+    }
+  },
+  {
+    accessorKey: "item_name",
+    header: "Product Name",
+    meta: {
+      filterable: true,
+      filterType: 'string'
+    }
+  },
+  {
+    id: "controlPrice",
+    header: "Control Price ($)",
+    cell: ({ row }) => {
+      const product = row.original;
+      return (
+        <Input
+          type="number"
+          value={editablePrices[product.id]?.controlPrice ?? ''}
+          onChange={(e) => handlePriceChange(product.id, 'controlPrice', e.target.value)}
+          className="text-right rounded-md h-8"
+          placeholder="Enter price"
+          min="0"
+          step="0.01"
+        />
+      );
+    },
+  },
+  {
+    id: "testPrice",
+    header: "Test Price ($)",
+    cell: ({ row }) => {
+      const product = row.original;
+      return (
+        <Input
+          type="number"
+          value={editablePrices[product.id]?.testPrice ?? ''}
+          onChange={(e) => handlePriceChange(product.id, 'testPrice', e.target.value)}
+          className="text-right rounded-md h-8"
+          placeholder="Enter price"
+          min="0"
+          step="0.01"
+        />
+      );
+    },
+  },
+];
