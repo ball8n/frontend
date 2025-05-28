@@ -72,10 +72,10 @@ export async function fetchProducts(): Promise<Product[]> {
 // --- Test Group API Calls --- 
 
 /**
- * Fetches the list of product groups.
+ * Fetches the list of price test groups.
  */
 export async function fetchTestGroups(): Promise<TestGroup[]> {
-  const response = await fetch(`${API_BASE_URL}/product_groups/`,{
+  const response = await fetch(`${API_BASE_URL}/product-groups/`,{
     method: 'GET',
     headers: {
       // Add Authorization header if needed, e.g.:
@@ -86,10 +86,10 @@ export async function fetchTestGroups(): Promise<TestGroup[]> {
 }
 
 /**
- * Fetches a specific product group by ID.
+ * Fetches a specific price test group by ID.
  */
 export async function fetchTestGroupById(groupId: string): Promise<ProductGroupInfo> {
-  const response = await fetch(`${API_BASE_URL}/product_groups/${groupId}`, {
+  const response = await fetch(`${API_BASE_URL}/product-groups/${groupId}`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${await getAuthToken()}`
@@ -110,7 +110,7 @@ export async function createTestGroup(groupName: string, productIds: string[]): 
     items: productIds,
   };
 
-  const response = await fetch(`${API_BASE_URL}/product_groups/`, {
+  const response = await fetch(`${API_BASE_URL}/product-groups/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -133,6 +133,59 @@ export async function fetchPriceTest(): Promise<PriceTest[]> {
     },
   });
   return handleResponse<PriceTest[]>(response);
+}
+
+/**
+ * Fetches price tests for a specific group.
+ */
+export async function fetchPriceTestsByGroup(groupId: string): Promise<PriceTest[]> {
+  const response = await fetch(`${API_BASE_URL}/price-test/by_group/${groupId}?is_controlled_test=false`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${await getAuthToken()}`
+    },
+  });
+  return handleResponse<PriceTest[]>(response);
+}
+
+/**
+ * Fetches sales data for a specific price test.
+ */
+export async function fetchPriceTestSales(priceTestId: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/price-test/${priceTestId}/sales`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${await getAuthToken()}`
+    },
+  });
+  return handleResponse<any>(response);
+}
+
+/**
+ * Fetches sales data for specific ASINs within a price test.
+ */
+export async function fetchPriceTestSalesByAsin(priceTestId: string, asins: string[]): Promise<any> {
+  const asinParams = asins.map(asin => `asins=${encodeURIComponent(asin)}`).join('&');
+  const response = await fetch(`${API_BASE_URL}/price-test/${priceTestId}/sales/asin?${asinParams}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${await getAuthToken()}`
+    },
+  });
+  return handleResponse<any>(response);
+}
+
+/**
+ * Fetches daily sales data for a specific price test.
+ */
+export async function fetchPriceTestSalesByDate(priceTestId: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/price-test/${priceTestId}/sales/date`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${await getAuthToken()}`
+    },
+  });
+  return handleResponse<any>(response);
 }
 
 export async function createPriceTest(groupId: string, priceTestName: string,startDate: Date,endDate: Date, items: string[] ): Promise<any> { // Adjust return type based on API
