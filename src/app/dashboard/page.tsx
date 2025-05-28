@@ -7,6 +7,7 @@ import AppShell from '@/components/app-shell';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchTestGroups } from '@/lib/api';
+import { TestGroup } from '@/components/data-table/columns';
 
 // Dynamically import the Dashboard component to avoid server-side rendering issues with charts
 const Dashboard = dynamic(() => import('@/components/dashboard/dashboard'), {
@@ -17,7 +18,7 @@ const Dashboard = dynamic(() => import('@/components/dashboard/dashboard'), {
 import DashboardSkeleton from '@/components/dashboard/dashboard-skeleton';
 
 export default function DashboardPage() {
-  const [testGroups, setTestGroups] = useState<{ id: string, name: string }[]>([]);
+  const [testGroups, setTestGroups] = useState<TestGroup[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,9 +78,11 @@ export default function DashboardPage() {
               <SelectValue placeholder="Select a group..." />
             </SelectTrigger>
             <SelectContent>
-              {testGroups.map((group) => (
+              {testGroups
+                .filter(group => group.is_active) // Only show active groups
+                .map((group) => (
                 <SelectItem key={group.id} value={group.id}>
-                  {group.name}
+                  {group.name} ({group.count} items)
                 </SelectItem>
               ))}
             </SelectContent>

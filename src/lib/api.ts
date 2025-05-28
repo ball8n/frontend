@@ -1,7 +1,7 @@
 // src/lib/api.ts
 
 // Import types directly
-import { Product, TestGroup, PriceTest } from "@/components/data-table/columns"; 
+import { Product, TestGroup, PriceTest, ProductGroupInfo } from "@/components/data-table/columns"; 
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 const API_BASE_URL = "http://localhost:4200"; // Assuming API routes are relative to the app's origin
 
@@ -25,7 +25,16 @@ async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: "Failed to parse error response" }));
     console.error(`API Error: ${response.status} ${response.statusText}`, errorData);
-    // Throw a more specific error or return a structured error object
+    
+    // Provide more specific error messages for common issues
+    if (response.status === 401) {
+      throw new Error(`Authentication failed: ${errorData.detail || 'Please check your login status'}`);
+    } else if (response.status === 403) {
+      throw new Error(`Access denied: ${errorData.detail || 'Insufficient permissions'}`);
+    } else if (response.status === 404) {
+      throw new Error(`Not found: ${errorData.detail || 'The requested resource was not found'}`);
+    }
+    
     throw new Error(`API request failed: ${response.status} ${response.statusText}`);
   }
   // Handle cases with no content (e.g., 204 No Content)
@@ -63,10 +72,10 @@ export async function fetchProducts(): Promise<Product[]> {
 // --- Test Group API Calls --- 
 
 /**
- * Fetches the list of price test groups.
+ * Fetches the list of product groups.
  */
 export async function fetchTestGroups(): Promise<TestGroup[]> {
-  const response = await fetch(`${API_BASE_URL}/price-test-groups/`,{
+  const response = await fetch(`${API_BASE_URL}/product_groups/`,{
     method: 'GET',
     headers: {
       // Add Authorization header if needed, e.g.:
@@ -74,6 +83,19 @@ export async function fetchTestGroups(): Promise<TestGroup[]> {
     },
   });
   return handleResponse<TestGroup[]>(response);
+}
+
+/**
+ * Fetches a specific product group by ID.
+ */
+export async function fetchTestGroupById(groupId: string): Promise<ProductGroupInfo> {
+  const response = await fetch(`${API_BASE_URL}/product_groups/${groupId}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${await getAuthToken()}`
+    },
+  });
+  return handleResponse<ProductGroupInfo>(response);
 }
 
 /**
@@ -88,7 +110,7 @@ export async function createTestGroup(groupName: string, productIds: string[]): 
     items: productIds,
   };
 
-  const response = await fetch(`${API_BASE_URL}/price-test-groups/`, {
+  const response = await fetch(`${API_BASE_URL}/product_groups/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

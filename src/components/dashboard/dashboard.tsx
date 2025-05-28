@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { dashboardData } from "@/data/dashboard_data";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie, Sector } from 'recharts';
+import { fetchTestGroupById } from "@/lib/api";
+import { ProductGroupInfo } from "@/components/data-table/columns";
 
 interface DashboardProps {
   groupId: string;
@@ -41,7 +43,31 @@ export default function Dashboard({ groupId }: DashboardProps) {
   const [selectedTestPeriods, setSelectedTestPeriods] = useState<string[]>(["test1"]);
   const [activeTestIndex, setActiveTestIndex] = useState(0);
   const [activeControlIndex, setActiveControlIndex] = useState(0);
+  const [groupInfo, setGroupInfo] = useState<ProductGroupInfo | null>(null);
+  const [groupLoading, setGroupLoading] = useState(true);
+  const [groupError, setGroupError] = useState<string | null>(null);
   const data = dashboardData;
+
+  // Fetch group information when groupId changes
+  useEffect(() => {
+    const loadGroupInfo = async () => {
+      if (!groupId) return;
+      
+      setGroupLoading(true);
+      setGroupError(null);
+      try {
+        const info = await fetchTestGroupById(groupId);
+        setGroupInfo(info);
+      } catch (err) {
+        console.error('Failed to fetch group info:', err);
+        setGroupError(err instanceof Error ? err.message : 'Failed to load group information');
+      } finally {
+        setGroupLoading(false);
+      }
+    };
+
+    loadGroupInfo();
+  }, [groupId]);
 
   // Helper function to get color for a test period
   const getTestPeriodColor = (period: string): string => {
@@ -143,35 +169,47 @@ export default function Dashboard({ groupId }: DashboardProps) {
           <CardTitle>Group Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium">Group:</p>
-              <p className="text-sm text-muted-foreground">{data.test_group}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Number of ASINs:</p>
-              <p className="text-sm text-muted-foreground">{data.asin_data.length}</p>
-            </div>
-          </div>
-          
-          {/* ASIN List */}
-          <div className="mt-2">
-            <p className="text-sm font-medium mb-2">ASINs in Group:</p>
-            <div className="grid grid-cols-4 gap-2">
-              {data.asin_data.map((item, index) => (
-                <div key={index} className="text-sm text-muted-foreground px-2 py-1">
-                  <a 
-                    href={`https://www.amazon.de/dp/${item.asin}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-blue-600 hover:underline"
-                  >
-                    {item.asin}
-                  </a>
+          {groupLoading ? (
+            <div className="text-sm text-muted-foreground">Loading group information...</div>
+          ) : groupError ? (
+            <div className="text-sm text-red-500">Error: {groupError}</div>
+          ) : groupInfo ? (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium">Group:</p>
+                  <p className="text-sm text-muted-foreground">{groupInfo.name}</p>
                 </div>
-              ))}
-            </div>
-          </div>
+                <div>
+                  <p className="text-sm font-medium">Number of ASINs:</p>
+                  <p className="text-sm text-muted-foreground">{groupInfo.items.filter(item => item.is_active).length}</p>
+                </div>
+              </div>
+              
+              {/* ASIN List */}
+              <div className="mt-2">
+                <p className="text-sm font-medium mb-2">ASINs in Group:</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {groupInfo.items
+                    .filter(item => item.is_active)
+                    .map((item) => (
+                    <div key={item.id} className="text-sm text-muted-foreground px-2 py-1">
+                      <a 
+                        href={`https://www.amazon.de/dp/${item.asin}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-blue-600 hover:underline"
+                      >
+                        {item.asin}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-sm text-muted-foreground">No group information available</div>
+          )}
         </CardContent>
       </Card>
 

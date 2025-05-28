@@ -82,6 +82,7 @@ export type Product = {
     id: string;
     name: string;
     count: number;
+    is_active: boolean;
   }
   
   export const testGroupColumns: ColumnDef<TestGroup>[] = [
@@ -190,3 +191,17 @@ export const priceTestColumns: ColumnDef<PriceTest>[] = [
     }
   },
 ]
+
+export type ProductGroupInfo = {
+  id: string;
+  name: string;
+  is_active: boolean;
+  items: ProductGroupItem[];
+}
+
+export type ProductGroupItem = {
+  id: string;
+  listing_id: string;
+  asin: string;
+  is_active: boolean;
+}
