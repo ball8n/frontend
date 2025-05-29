@@ -1,11 +1,13 @@
 "use client";
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
 import AppShell from '@/components/app-shell';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { fetchTestGroups } from '@/lib/api';
+import { TestGroup } from '@/components/data-table/columns';
 
 // Dynamically import the Dashboard component to avoid server-side rendering issues with charts
 const Dashboard = dynamic(() => import('@/components/dashboard/dashboard'), {
@@ -15,13 +17,56 @@ const Dashboard = dynamic(() => import('@/components/dashboard/dashboard'), {
 
 import DashboardSkeleton from '@/components/dashboard/dashboard-skeleton';
 
-// Currently we only have one test group
-const TEST_GROUPS = [
-  { id: "blocher", name: "Blocher Glasses Group" }
-];
-
 export default function DashboardPage() {
-  const [selectedGroup, setSelectedGroup] = useState(TEST_GROUPS[0].id);
+  const [testGroups, setTestGroups] = useState<TestGroup[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadTestGroups = async () => {
+      try {
+        const groups = await fetchTestGroups();
+        setTestGroups(groups);
+        setIsLoading(false);
+      } catch (err) {
+        setError('Failed to load test groups');
+        setIsLoading(false);
+        console.error(err);
+      }
+    };
+
+    loadTestGroups();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <AppShell>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold tracking-tight">Test Analysis Dashboard</h1>
+            <Skeleton className="h-10 w-[240px]" />
+          </div>
+          <DashboardSkeleton />
+        </div>
+      </AppShell>
+    );
+  }
+  
+  if (error) {
+    return (
+      <AppShell>
+        <Card>
+          <CardHeader>
+            <CardTitle>Error</CardTitle>
+            <CardDescription>
+              {error}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -30,12 +75,14 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold tracking-tight">Test Analysis Dashboard</h1>
           <Select value={selectedGroup} onValueChange={setSelectedGroup}>
             <SelectTrigger className="w-[240px]">
-              <SelectValue placeholder="Select a test group" />
+              <SelectValue placeholder="Select a group..." />
             </SelectTrigger>
             <SelectContent>
-              {TEST_GROUPS.map((group) => (
+              {testGroups
+                .filter(group => group.is_active) // Only show active groups
+                .map((group) => (
                 <SelectItem key={group.id} value={group.id}>
-                  {group.name}
+                  {group.name} ({group.count} items)
                 </SelectItem>
               ))}
             </SelectContent>

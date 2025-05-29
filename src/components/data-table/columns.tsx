@@ -82,6 +82,7 @@ export type Product = {
     id: string;
     name: string;
     count: number;
+    is_active: boolean;
   }
   
   export const testGroupColumns: ColumnDef<TestGroup>[] = [
@@ -109,6 +110,7 @@ export type PriceTest = {
   start_date: string; // Keep as string if data source is string
   end_date: string;   // Keep as string if data source is string
   status: "completed" | "running" | "paused" | "scheduled" | "cancelled";
+  control_price_test_id?: string; // Optional field for control test reference
   // Add optional fields for future use if needed
   // testGroupId?: string;
   // priceData?: any[]; // Define a proper type later
@@ -190,3 +192,17 @@ export const priceTestColumns: ColumnDef<PriceTest>[] = [
     }
   },
 ]
+
+export type ProductGroupInfo = {
+  id: string;
+  name: string;
+  is_active: boolean;
+  items: ProductGroupItem[];
+}
+
+export type ProductGroupItem = {
+  id: string;
+  listing_id: string;
+  asin: string;
+  is_active: boolean;
+}
