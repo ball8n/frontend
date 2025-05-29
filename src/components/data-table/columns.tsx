@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 
 export type Product = {
     id: string;
@@ -204,5 +205,105 @@ export type ProductGroupItem = {
   id: string;
   listing_id: string;
   asin: string;
+  item_name: string | null;
+  price: number | null;
   is_active: boolean;
 }
+
+// ===================================
+// Product Pricing Columns (for Add Test Dialog)
+// ===================================
+export type ProductPricing = {
+  id: string;
+  listing_id: string;
+  asin: string;
+  item_name: string | null;
+  price: number | null;
+  controlPrice: string;
+  testPrice: string;
+}
+
+export const createProductPricingColumns = (
+  onPriceChange: (productId: string, priceType: 'controlPrice' | 'testPrice', value: string) => void
+): ColumnDef<ProductPricing>[] => [
+  {
+    accessorKey: "asin",
+    header: "ASIN",
+    cell: ({ row }) => (
+      <a href={`https://www.amazon.de/dp/${row.original.asin}`}
+         target="_blank"
+         rel="noopener noreferrer"
+         className="text-blue-600 hover:underline"
+         onClick={(e) => e.stopPropagation()}
+      >
+        {row.original.asin}
+      </a>
+    ),
+    meta: {
+      filterable: true,
+      filterType: "string",
+    }
+  },
+  {
+    accessorKey: "item_name",
+    header: "Product Name",
+    cell: ({ row }) => {
+      const itemName = row.original.item_name || 'N/A';
+      const maxLength = 40; // Adjust this value as needed
+      const truncatedName = itemName.length > maxLength 
+        ? `${itemName.substring(0, maxLength)}...` 
+        : itemName;
+      
+      return (
+        <div className="relative group">
+          <span className="cursor-default">{truncatedName}</span>
+          {itemName.length > maxLength && (
+            <div className="absolute left-0 top-full mt-1 px-2 py-1 bg-black text-white text-sm rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50 max-w-xs whitespace-normal break-words">
+              {itemName}
+            </div>
+          )}
+        </div>
+      );
+    },
+    meta: {
+      filterable: true,
+      filterType: "string",
+    }
+  },
+  {
+    accessorKey: "controlPrice",
+    header: "Control Price ($)",
+    cell: ({ row }) => (
+      <div className="text-right">
+        <Input
+          type="number"
+          value={row.original.controlPrice}
+          onChange={(e) => onPriceChange(row.original.id, 'controlPrice', e.target.value)}
+          className="text-right rounded-md h-8"
+          placeholder="Enter price"
+          min="0"
+          step="0.01"
+        />
+      </div>
+    ),
+    enableSorting: false,
+  },
+  {
+    accessorKey: "testPrice",
+    header: "Test Price ($)",
+    cell: ({ row }) => (
+      <div className="text-right">
+        <Input
+          type="number"
+          value={row.original.testPrice}
+          onChange={(e) => onPriceChange(row.original.id, 'testPrice', e.target.value)}
+          className="text-right rounded-md h-8"
+          placeholder="Enter price"
+          min="0"
+          step="0.01"
+        />
+      </div>
+    ),
+    enableSorting: false,
+  },
+]
