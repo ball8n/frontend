@@ -188,13 +188,23 @@ export async function fetchPriceTestSalesByDate(priceTestId: string): Promise<an
   return handleResponse<any>(response);
 }
 
-export async function createPriceTest(groupId: string, priceTestName: string,startDate: Date,endDate: Date, items: string[] ): Promise<any> { // Adjust return type based on API
+export async function createPriceTest(
+  groupId: string, 
+  priceTestName: string, 
+  startDate: Date, 
+  endDate: Date, 
+  items: string[], 
+  isControlGroup: boolean = false, 
+  controlPriceTestId: string | null = null
+): Promise<any> { // Adjust return type based on API
   const payload = {
     name: priceTestName,
     group_id: groupId,
     start_date: formatDateToYYYYMMDD(startDate),
     end_date: formatDateToYYYYMMDD(endDate),
     items: items,
+    is_control_group: isControlGroup,
+    control_price_test_id: controlPriceTestId,
   };
 
   const response = await fetch(`${API_BASE_URL}/price-test/`, {
