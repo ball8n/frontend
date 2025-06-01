@@ -48,9 +48,25 @@ export default function TestsPage() {
 
 
   // Update handleCreateTest to accept the prices array
-  const handleCreateTest = async (priceTestName: string, groupId: string, startDate: Date,endDate: Date, items: string[] ): Promise<any> => { // Adjust return type based on API
+  const handleCreateTest = async (
+    priceTestName: string,
+    groupId: string,
+    startDate: Date,
+    endDate: Date,
+    items: string[],
+    isControlGroup: boolean = false,
+    controlPriceTestId: string | null = null
+  ): Promise<any> => { // Adjust return type based on API
     try {
-      const createdPriceTest = await createPriceTest(groupId, priceTestName,startDate,endDate, items);
+      const createdPriceTest = await createPriceTest(
+        groupId,
+        priceTestName,
+        startDate,
+        endDate,
+        items,
+        isControlGroup,
+        controlPriceTestId
+      );
       console.log("API Response (created price test):", createdPriceTest);
       await loadData();
     } catch (error) {

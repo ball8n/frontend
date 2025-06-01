@@ -248,7 +248,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
       value: item.data?.total_units || 0, // Units are in 'data.total_units'
       percentage: totalUnits > 0 ? (((item.data?.total_units || 0) / totalUnits) * 100).toFixed(1) : '0.0'
     }));
-    
+
     return { pieData, totalUnits };
   };
 

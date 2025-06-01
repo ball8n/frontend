@@ -22,14 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
@@ -38,9 +30,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { TestGroup } from "@/components/data-table/columns"
-import { fetchTestGroups } from "@/lib/api"
-import { Product } from "@/components/data-table/columns"
+import { TestGroup, ProductGroupItem, ProductPricing, createProductPricingColumns } from "@/components/data-table/columns"
+import { fetchTestGroups, fetchTestGroupById } from "@/lib/api"
+import { DataTable } from "@/components/data-table/data-table"
 
 // Type for passing price updates
 type ProductPriceInfo = {
@@ -68,7 +60,7 @@ export function AddTestDialog({ open, onOpenChange, onAddTest }: AddTestDialogPr
   const [groupsLoading, setGroupsLoading] = useState<boolean>(false);
   const [groupsError, setGroupsError] = useState<string | null>(null);
   
-  const [products, setProducts] = React.useState<Product[]>([]); // State for products
+  const [products, setProducts] = React.useState<ProductGroupItem[]>([]); // State for products
   // State for editable prices: { productId: { controlPrice: string, testPrice: string } }
   const [editablePrices, setEditablePrices] = React.useState<Record<string, { controlPrice: string; testPrice: string }>>({});
   const [nameError, setNameError] = React.useState<string | null>(null);
@@ -154,24 +146,29 @@ export function AddTestDialog({ open, onOpenChange, onAddTest }: AddTestDialogPr
     return isValid;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (validatePage1()) {
-      // Find group from API data
-      const group = apiTestGroups.find(g => g.id === selectedGroupId);
+      try {
+        // Fetch products from the selected group using the API
+        const groupInfo = await fetchTestGroupById(selectedGroupId!);
+        const fetchedProducts = groupInfo.items;
+        setProducts(fetchedProducts);
 
-      // TODO: Fetch products based on the selected group (group?.id)
-      // For now, setting products to empty array
-      const fetchedProducts: Product[] = []; // Replace with actual API call
-      setProducts(fetchedProducts);
+        // Initialize editable prices based on fetched products
+        const initialPrices: Record<string, { controlPrice: string; testPrice: string }> = {};
+        fetchedProducts.forEach((product: ProductGroupItem) => {
+          initialPrices[product.id] = { 
+            controlPrice: product.price?.toString() || '', 
+            testPrice: '' 
+          };
+        });
+        setEditablePrices(initialPrices);
 
-      // Initialize editable prices based on fetched products
-      const initialPrices: Record<string, { controlPrice: string; testPrice: string }> = {};
-      fetchedProducts.forEach((p: Product) => { // Explicitly type p as Product
-        initialPrices[p.id] = { controlPrice: p.price.toString(), testPrice: '' }; // Control price prefilled, test price empty
-      });
-      setEditablePrices(initialPrices);
-
-      setCurrentPage(2);
+        setCurrentPage(2);
+      } catch (error) {
+        console.error("Failed to fetch group products:", error);
+        setGroupError("Failed to load products for this group. Please try again.");
+      }
     }
   };
 
@@ -180,9 +177,10 @@ export function AddTestDialog({ open, onOpenChange, onAddTest }: AddTestDialogPr
   };
 
   // Handler for price input changes
-  const handlePriceChange = (productId: string, priceType: 'controlPrice' | 'testPrice', value: string) => {
-    // Basic validation: allow only numbers and a single decimal point
-    if (/^\d*\.?\d*$/.test(value)) {
+  const handlePriceChange = React.useCallback((productId: string, priceType: 'controlPrice' | 'testPrice', value: string) => {
+    // Allow empty string or valid number patterns (including partial inputs like "1.", "12.5", etc.)
+    // This regex allows: empty string, digits, one decimal point, and digits after decimal
+    if (value === '' || /^(\d+\.?\d*|\.\d*)$/.test(value)) {
         setEditablePrices(prevPrices => ({
             ...prevPrices,
             [productId]: {
@@ -191,7 +189,23 @@ export function AddTestDialog({ open, onOpenChange, onAddTest }: AddTestDialogPr
             }
         }));
     }
-  };
+  }, []); // Empty dependency array since we only use setEditablePrices which is stable
+
+  // Transform products data for the DataTable
+  const productPricingData: ProductPricing[] = React.useMemo(() => {
+    return products.map(product => ({
+      id: product.id,
+      listing_id: product.listing_id,
+      asin: product.asin,
+      item_name: product.item_name,
+      price: product.price,
+      controlPrice: editablePrices[product.id]?.controlPrice ?? (product.price?.toString() || ''),
+      testPrice: editablePrices[product.id]?.testPrice ?? '',
+    }));
+  }, [products, editablePrices]);
+
+  // Create columns with the price change handler
+  const pricingColumns = React.useMemo(() => createProductPricingColumns(handlePriceChange), []);
 
   const handleSubmit = () => {
     setItems(products.map(product => product.id));
@@ -362,54 +376,7 @@ export function AddTestDialog({ open, onOpenChange, onAddTest }: AddTestDialogPr
         {/* Page 2 Content */}
          {currentPage === 2 && (
           <div className="py-4 max-h-[500px] overflow-y-auto"> {/* Increased max height */}
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[150px]">Product ID</TableHead>
-                  <TableHead>Product Name</TableHead>
-                  <TableHead className="w-[150px] text-right">Control Price ($)</TableHead> {/* New Column */}
-                  <TableHead className="w-[150px] text-right">Test Price ($)</TableHead>    {/* New Column */}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.length === 0 ? (
-                   <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground"> {/* Updated colSpan */} 
-                        No products found for this group.
-                      </TableCell>
-                    </TableRow>
-                ) : (
-                  products.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">{product.id}</TableCell>
-                      <TableCell>{product.item_name}</TableCell>
-                      <TableCell className="text-right">
-                        <Input
-                          type="number"
-                          value={editablePrices[product.id]?.controlPrice ?? ''}
-                          onChange={(e) => handlePriceChange(product.id, 'controlPrice', e.target.value)}
-                          className="text-right rounded-md h-8"
-                          placeholder="Enter price"
-                           min="0"
-                           step="0.01" // Allows decimal steps
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                         <Input
-                          type="number"
-                          value={editablePrices[product.id]?.testPrice ?? ''}
-                          onChange={(e) => handlePriceChange(product.id, 'testPrice', e.target.value)}
-                          className="text-right rounded-md h-8"
-                          placeholder="Enter price"
-                           min="0"
-                           step="0.01" // Allows decimal steps
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <DataTable columns={pricingColumns} data={productPricingData} />
           </div>
         )}
 
