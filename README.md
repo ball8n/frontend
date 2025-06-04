@@ -39,7 +39,21 @@ This is a modern implementation of the test analysis dashboard using Next.js and
    npm install recharts
    ```
 
-5. **Start the Development Server**:
+5. **Configure Environment Variables**:
+
+   Create a `.env.local` file in the project root with the following:
+
+   ```bash
+   # Base API URL for all backend requests
+   NEXT_PUBLIC_BALLOON_BASE_API_URL=http://localhost:4200
+   
+   # Firebase configuration (if used)
+   # NEXT_PUBLIC_FIREBASE_API_KEY=...
+   # NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+   # (other NEXT_PUBLIC_FIREBASE_* vars)
+   ```
+
+6. **Start the Development Server**:
    ```bash
    npm run dev
    ```

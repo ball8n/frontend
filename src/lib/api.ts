@@ -3,7 +3,8 @@
 // Import types directly
 import { Product, TestGroup, PriceTest, ProductGroupInfo } from "@/components/data-table/columns"; 
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
-const API_BASE_URL = "http://localhost:4200"; // Assuming API routes are relative to the app's origin
+// Base URL for API requests; set NEXT_PUBLIC_BALLOON_BASE_API_URL in your .env.local to override
+const BALLOON_BASE_API_URL = process.env.NEXT_PUBLIC_BALLOON_BASE_API_URL || "http://localhost:4200";
 
 function waitForAuth(): Promise<User | null> {
   const auth = getAuth();
@@ -58,7 +59,7 @@ function formatDateToYYYYMMDD(date: Date): string {
  * Fetches the list of products.
  */
 export async function fetchProducts(): Promise<Product[]> {
-  const response = await fetch(`${API_BASE_URL}/products/`,{
+  const response = await fetch(`${BALLOON_BASE_API_URL}/products/`,{
     method: 'GET',
     headers: {
       // Add Authorization header if needed, e.g.:
@@ -75,7 +76,7 @@ export async function fetchProducts(): Promise<Product[]> {
  * Fetches the list of price test groups.
  */
 export async function fetchTestGroups(): Promise<TestGroup[]> {
-  const response = await fetch(`${API_BASE_URL}/product-groups/`,{
+  const response = await fetch(`${BALLOON_BASE_API_URL}/product-groups/`,{
     method: 'GET',
     headers: {
       // Add Authorization header if needed, e.g.:
@@ -89,7 +90,7 @@ export async function fetchTestGroups(): Promise<TestGroup[]> {
  * Fetches a specific price test group by ID.
  */
 export async function fetchTestGroupById(groupId: string): Promise<ProductGroupInfo> {
-  const response = await fetch(`${API_BASE_URL}/product-groups/${groupId}`, {
+  const response = await fetch(`${BALLOON_BASE_API_URL}/product-groups/${groupId}`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${await getAuthToken()}`
@@ -110,7 +111,7 @@ export async function createTestGroup(groupName: string, productIds: string[]): 
     items: productIds,
   };
 
-  const response = await fetch(`${API_BASE_URL}/product-groups/`, {
+  const response = await fetch(`${BALLOON_BASE_API_URL}/product-groups/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -125,7 +126,7 @@ export async function createTestGroup(groupName: string, productIds: string[]): 
 
 
 export async function fetchPriceTest(): Promise<PriceTest[]> {
-  const response = await fetch(`${API_BASE_URL}/price-test/`,{
+  const response = await fetch(`${BALLOON_BASE_API_URL}/price-test/`,{
     method: 'GET',
     headers: {
       // Add Authorization header if needed, e.g.:
@@ -139,7 +140,7 @@ export async function fetchPriceTest(): Promise<PriceTest[]> {
  * Fetches price tests for a specific group.
  */
 export async function fetchPriceTestsByGroup(groupId: string): Promise<PriceTest[]> {
-  const response = await fetch(`${API_BASE_URL}/price-test/by_group/${groupId}?is_controlled_test=false`, {
+  const response = await fetch(`${BALLOON_BASE_API_URL}/price-test/by_group/${groupId}?is_controlled_test=false`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${await getAuthToken()}`
@@ -152,7 +153,7 @@ export async function fetchPriceTestsByGroup(groupId: string): Promise<PriceTest
  * Fetches sales data for a specific price test.
  */
 export async function fetchPriceTestSales(priceTestId: string): Promise<any> {
-  const response = await fetch(`${API_BASE_URL}/price-test/${priceTestId}/sales`, {
+  const response = await fetch(`${BALLOON_BASE_API_URL}/price-test/${priceTestId}/sales`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${await getAuthToken()}`
@@ -166,7 +167,7 @@ export async function fetchPriceTestSales(priceTestId: string): Promise<any> {
  */
 export async function fetchPriceTestSalesByAsin(priceTestId: string, asins: string[]): Promise<any> {
   const asinParams = asins.map(asin => `asins=${encodeURIComponent(asin)}`).join('&');
-  const response = await fetch(`${API_BASE_URL}/price-test/${priceTestId}/sales/asin?${asinParams}`, {
+  const response = await fetch(`${BALLOON_BASE_API_URL}/price-test/${priceTestId}/sales/asin?${asinParams}`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${await getAuthToken()}`
@@ -179,7 +180,7 @@ export async function fetchPriceTestSalesByAsin(priceTestId: string, asins: stri
  * Fetches daily sales data for a specific price test.
  */
 export async function fetchPriceTestSalesByDate(priceTestId: string): Promise<any> {
-  const response = await fetch(`${API_BASE_URL}/price-test/${priceTestId}/sales/date`, {
+  const response = await fetch(`${BALLOON_BASE_API_URL}/price-test/${priceTestId}/sales/date`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${await getAuthToken()}`
@@ -207,7 +208,7 @@ export async function createPriceTest(
     control_price_test_id: controlPriceTestId,
   };
 
-  const response = await fetch(`${API_BASE_URL}/price-test/`, {
+  const response = await fetch(`${BALLOON_BASE_API_URL}/price-test/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
