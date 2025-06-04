@@ -29,12 +29,17 @@ export default function DailyComparisonChart({
 }: DailyComparisonChartProps) {
   // Format the data for the chart
   const chartData = useMemo(() => {
-    return data.map(day => ({
-      date: format(parseISO(day.date), 'MMM d'),
-      testValue: metric === 'units' ? day.test_units : day.test_sales,
-      controlValue: metric === 'units' ? day.control_units : day.control_sales,
-    }));
-  }, [data, metric]);
+    return data.map(day => {
+      const isTest = testDates.includes(day.date);
+      const isControl = controlDates.includes(day.date);
+      const value = metric === 'units' ? day.units : day.sales;
+      return {
+        date: format(parseISO(day.date), 'MMM d'),
+        testValue: isTest ? value : 0,
+        controlValue: isControl ? value : 0,
+      };
+    });
+  }, [data, metric, testDates, controlDates]);
 
   // Calculate Y-axis domain based on max value
   const maxValue = useMemo(() => {

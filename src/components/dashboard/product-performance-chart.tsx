@@ -1,7 +1,12 @@
 'use client';
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { ProductPerformance } from '@/data/dashboard_data';
+
+// Define the type for product performance data
+interface ProductPerformance {
+  asin: string;
+  performance: number;
+}
 
 interface ProductPerformanceChartProps {
   data: ProductPerformance[];
