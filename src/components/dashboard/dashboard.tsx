@@ -14,13 +14,16 @@ interface DashboardProps {
   groupId: string;
 }
 
-// Consistent color mapping for test periods - use the same color for the same test period regardless of selection
-const TEST_PERIOD_COLORS: Record<string, string> = {
-  "test1": "#4C72B0", // blue
-  "test2": "#55A868", // green
-  "test3": "#C44E52", // red
-  // Add more colors if needed for additional test periods
-};
+// Color palette for test periods (will be assigned in order of available tests)
+const TEST_PERIOD_PALETTE = [
+  "#4C72B0", // blue
+  "#55A868", // green
+  "#C44E52", // red
+  "#8172B2", // purple
+  "#CCB974", // mustard
+  "#64B5CD", // teal
+  "#8C8C8C"  // gray
+];
 
 // Control period color
 const CONTROL_COLOR = "#DD8452"; // orange
@@ -221,9 +224,10 @@ export default function Dashboard({ groupId }: DashboardProps) {
     }
   };
 
-  // Helper function to get color for a test period
+  // Helper function to get color for a test period based on its index in priceTests
   const getTestPeriodColor = (period: string): string => {
-    return TEST_PERIOD_COLORS[period] || "#4C72B0"; // Default to blue if not found
+    const idx = priceTests.findIndex(test => test.id === period);
+    return TEST_PERIOD_PALETTE[idx >= 0 ? idx % TEST_PERIOD_PALETTE.length : 0];
   };
 
   // Helper function to get the current control price test ID
