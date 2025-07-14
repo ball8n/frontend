@@ -236,7 +236,7 @@ export function AddTestDialog({ open, onOpenChange, onAddTest }: AddTestDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl rounded-lg"> {/* Increased width further */}
+      <DialogContent className="sm:max-w-2xl rounded-lg" onClose={() => onOpenChange(false)}> {/* Increased width further */}
         <DialogHeader>
           <DialogTitle>
             {currentPage === 1 ? "Create New Price Test (Step 1/2)" : `Review Products for "${selectedGroup?.name ?? ''}" (Step 2/2)`}

@@ -63,7 +63,7 @@ export function AddGroupDialog({ open, onOpenChange, onAddGroup }: AddGroupDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] rounded-xl">
+      <DialogContent className="sm:max-w-[900px] rounded-xl" onClose={() => onOpenChange(false)}>
         <DialogHeader>
           <DialogTitle>Add New Test Group</DialogTitle>
           <DialogDescription>
