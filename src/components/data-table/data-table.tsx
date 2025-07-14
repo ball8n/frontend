@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { Input } from "@/components/ui/input"
 import {
@@ -66,6 +67,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   enableRowSelection?: boolean
   onSelectionChange?: (selectedRows: TData[]) => void
+  maxHeight?: string
 }
 
 // Define the select column definition generically
@@ -100,6 +102,7 @@ export function DataTable<TData, TValue>({
   data,
   enableRowSelection = false,
   onSelectionChange,
+  maxHeight = "h-[300px] max-h-[40vh]",
 }: DataTableProps<TData, TValue>) {
     // Rename internal state back to regular names
     const [searchQuery, setSearchQuery] = React.useState("")
@@ -425,6 +428,7 @@ export function DataTable<TData, TValue>({
       {/* Custom built table */}
       <div>
         <div className="rounded-md border">
+          {/* Fixed Header */}
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -446,29 +450,35 @@ export function DataTable<TData, TValue>({
                 </TableRow>
               ))}
             </TableHeader>
-           <TableBody>
-             {table.getRowModel().rows?.length ? (
-               table.getRowModel().rows.map((row) => (
-                 <TableRow
-                   key={row.id}
-                   data-state={row.getIsSelected() && "selected"}
-                 >
-                   {row.getVisibleCells().map((cell) => (
-                     <TableCell key={cell.id}>
-                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                     </TableCell>
-                   ))}
-                 </TableRow>
-               ))
-             ) : (
-               <TableRow>
-                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                   No results.
-                 </TableCell>
-               </TableRow>
-             )}
-           </TableBody>
-         </Table>
+          </Table>
+          
+          {/* Scrollable Body */}
+          <ScrollArea className={maxHeight}>
+            <Table>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </ScrollArea>
         </div>
          <div className="flex items-center justify-between py-4">
             <div className="text-sm text-muted-foreground flex-1">

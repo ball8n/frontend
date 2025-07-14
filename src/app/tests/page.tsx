@@ -102,7 +102,11 @@ export default function TestsPage() {
             {loading && <p>Loading price tests...</p>}
             {error && <p className="text-red-500">Error: {error}</p>}
             {!loading && !error && (
-              <DataTable data={data} columns={priceTestColumns} />
+              <DataTable 
+                data={data} 
+                columns={priceTestColumns} 
+                maxHeight=""
+              />
             )}
 
             

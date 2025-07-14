@@ -83,7 +83,11 @@ export default function TestGroupsPage() {
             {loading && <p>Loading test groups...</p>}
             {error && <p className="text-red-500">Error: {error}</p>}
             {!loading && !error && (
-              <DataTable data={data} columns={testGroupColumns} />
+              <DataTable 
+                data={data} 
+                columns={testGroupColumns} 
+                maxHeight=""
+              />
             )}
           </CardContent>
         </Card>

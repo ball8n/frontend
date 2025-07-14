@@ -63,15 +63,15 @@ export function AddGroupDialog({ open, onOpenChange, onAddGroup }: AddGroupDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] rounded-xl" onClose={() => onOpenChange(false)}>
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[900px] max-w-[95vw] max-h-[95vh] rounded-xl flex flex-col overflow-hidden" onClose={() => onOpenChange(false)}>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Add New Test Group</DialogTitle>
           <DialogDescription>
             Create a new test group by selecting products and providing a group name.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="my-4">
+        <div className="flex-shrink-0 my-4">
           <Label htmlFor="group-name">Group Name</Label>
           <Input 
             id="group-name"
@@ -82,9 +82,9 @@ export function AddGroupDialog({ open, onOpenChange, onAddGroup }: AddGroupDialo
           />
         </div>
 
-        <div className="my-4">
-          <Label>Select Products</Label>
-          <div className="mt-2">
+        <div className="flex-1 min-h-0 flex flex-col">
+          <Label className="flex-shrink-0 mb-2">Select Products</Label>
+          <div className="flex-1 min-h-0 max-h-[50vh]">
             {loadingProducts && <p>Loading products...</p>}
             {productError && <p className="text-red-500">Error: {productError}</p>}
             {!loadingProducts && !productError && (
@@ -93,12 +93,13 @@ export function AddGroupDialog({ open, onOpenChange, onAddGroup }: AddGroupDialo
                 data={productsData} 
                 enableRowSelection={true}
                 onSelectionChange={handleSelectionChange}
+                maxHeight="h-[250px] max-h-[35vh]"
               />
             )}
           </div>
         </div>
 
-        <DialogFooter className="gap-2 mt-6">
+        <DialogFooter className="gap-2 mt-6 flex-shrink-0">
           <span className="text-sm mr-auto text-muted-foreground">
             Selected: {selectedProductIds.length}
           </span>
