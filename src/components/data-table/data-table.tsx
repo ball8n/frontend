@@ -68,6 +68,7 @@ interface DataTableProps<TData, TValue> {
   enableRowSelection?: boolean
   onSelectionChange?: (selectedRows: TData[]) => void
   maxHeight?: string
+  initialSorting?: SortingState
 }
 
 // Define the select column definition generically
@@ -103,11 +104,13 @@ export function DataTable<TData, TValue>({
   enableRowSelection = false,
   onSelectionChange,
   maxHeight = "h-[300px] max-h-[40vh]",
+  initialSorting = [],
 }: DataTableProps<TData, TValue>) {
     // Rename internal state back to regular names
     const [searchQuery, setSearchQuery] = React.useState("")
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]) 
     const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({}) 
+    const [sorting, setSorting] = React.useState<SortingState>(initialSorting)
     // Filter config state remains the same
     const [newFilterColumnId, setNewFilterColumnId] = React.useState<string>("")
     const [selectedColumnMeta, setSelectedColumnMeta] = React.useState<ColumnMetaWithOptions | null>(null);
@@ -128,16 +131,19 @@ export function DataTable<TData, TValue>({
       state: { 
           columnFilters, // Use direct state 
           rowSelection,    // Use direct state
-          globalFilter: searchQuery // Use direct state
+          globalFilter: searchQuery, // Use direct state
+          sorting: sorting // Use sorting state
       },
       onColumnFiltersChange: setColumnFilters, // Set direct state
       onRowSelectionChange: setRowSelection,    // Set direct state
       onGlobalFilterChange: setSearchQuery,   // Set direct state
+      onSortingChange: setSorting, // Use setSorting to update sorting
       // Other options remain the same
       getCoreRowModel: getCoreRowModel(),
       getFilteredRowModel: getFilteredRowModel(), 
       getPaginationRowModel: getPaginationRowModel(),
       getFacetedUniqueValues: getFacetedUniqueValues(),
+      getSortedRowModel: getSortedRowModel(),
       globalFilterFn: "includesString",
       filterFns: { /* ... */ },
       enableMultiRowSelection: enableRowSelection, 
