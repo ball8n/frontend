@@ -51,7 +51,7 @@ export default function ProductsPage() {
               <DataTable 
                 columns={productColumns} 
                 data={data} 
-                maxHeight="h-[570px] max-h-[60vh]"
+                maxHeight="h-[500px] max-h-[60vh]"
               />
             )}
           </CardContent>
