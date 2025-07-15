@@ -502,11 +502,11 @@ export default function Dashboard({ groupId }: DashboardProps) {
             <div className="text-sm text-muted-foreground">No price tests found for this group</div>
           ) : (
             <div className={`grid gap-4 ${
-              priceTests.length <= 3 ? 'md:grid-cols-3' : 
-              priceTests.length === 4 ? 'md:grid-cols-4' : 
+              priceTests.filter(test => test.status !== 'scheduled').length <= 3 ? 'md:grid-cols-3' : 
+              priceTests.filter(test => test.status !== 'scheduled').length === 4 ? 'md:grid-cols-4' : 
               'md:grid-cols-5'
             }`}>
-              {priceTests.map((test, index) => (
+              {priceTests.filter(test => test.status !== 'scheduled').map((test, index) => (
                 <Card key={test.id} className={`border-l-4 ${selectedTestPeriods.includes(test.id) ? `border-l-[${getTestPeriodColor(test.id)}] bg-opacity-10 bg-[${getTestPeriodColor(test.id)}]` : 'border-l-gray-200'}`}>
                   <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between">
                     <div>
