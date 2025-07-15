@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie, Sector } from 'recharts';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie, Sector } from 'recharts';
 import { fetchTestGroupById, fetchPriceTestsByGroup, fetchPriceTestSales, fetchPriceTestSalesByDate, fetchPriceTestSalesByAsin } from "@/lib/api";
 import { ProductGroupInfo, PriceTest } from "@/components/data-table/columns";
 
@@ -86,16 +87,33 @@ export default function Dashboard({ groupId }: DashboardProps) {
       try {
         const tests = await fetchPriceTestsByGroup(groupId);
         setPriceTests(tests);
-        // Auto-select the first test if available
+        // Auto-select the last completed test if available
         if (tests.length > 0) {
-          console.log('Auto-selecting first test:', tests[0]);
-          setSelectedTestPeriods([tests[0].id]);
-          // Set control price test ID from the first test
-          if (tests[0].control_price_test_id) {
-            console.log('Initial control price test ID:', tests[0].control_price_test_id);
-            setControlPriceTestId(tests[0].control_price_test_id);
+          // Filter for completed tests
+          const completedTests = tests.filter(test => test.status === "completed");
+          
+          let selectedTest;
+          if (completedTests.length > 0) {
+            // Find the most recent completed test by end date
+            selectedTest = completedTests.reduce((latest, current) => {
+              const latestEndDate = new Date(latest.end_date);
+              const currentEndDate = new Date(current.end_date);
+              return currentEndDate > latestEndDate ? current : latest;
+            });
+            console.log('Auto-selecting last completed test:', selectedTest);
           } else {
-            console.log('No control_price_test_id in first test');
+            // Fallback to first test if no completed tests
+            selectedTest = tests[0];
+            console.log('No completed tests found, auto-selecting first test:', selectedTest);
+          }
+          
+          setSelectedTestPeriods([selectedTest.id]);
+          // Set control price test ID from the selected test
+          if (selectedTest.control_price_test_id) {
+            console.log('Initial control price test ID:', selectedTest.control_price_test_id);
+            setControlPriceTestId(selectedTest.control_price_test_id);
+          } else {
+            console.log('No control_price_test_id in selected test');
             setControlPriceTestId(null);
           }
         } else {
@@ -396,7 +414,8 @@ export default function Dashboard({ groupId }: DashboardProps) {
 
 
   return (
-    <div className="space-y-6">
+    <TooltipProvider>
+      <div className="space-y-6">
       {/* Group Info */}
       <Card>
         <CardHeader>
@@ -509,15 +528,27 @@ export default function Dashboard({ groupId }: DashboardProps) {
                       </CardDescription>
                     </div>
                     <div className="flex items-center h-5">
-                      <Checkbox 
-                        id={`test-${test.id}`} 
-                        checked={selectedTestPeriods.includes(test.id)}
-                        onCheckedChange={() => toggleTestPeriod(test.id)}
-                        disabled={
-                          (selectedTestPeriods.includes(test.id) && selectedTestPeriods.length === 1) || 
-                          (!selectedTestPeriods.includes(test.id) && selectedTestPeriods.length >= 3)
-                        }
-                      />
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <Checkbox 
+                                id={`test-${test.id}`} 
+                                checked={selectedTestPeriods.includes(test.id)}
+                                onCheckedChange={() => toggleTestPeriod(test.id)}
+                                disabled={
+                                  (selectedTestPeriods.includes(test.id) && selectedTestPeriods.length === 1) || 
+                                  (!selectedTestPeriods.includes(test.id) && selectedTestPeriods.length >= 3)
+                                }
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          {((selectedTestPeriods.includes(test.id) && selectedTestPeriods.length === 1) || 
+                            (!selectedTestPeriods.includes(test.id) && selectedTestPeriods.length >= 3)) && (
+                            <TooltipContent>
+                              <p>select a different test to unselect this one.</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 pt-2 text-xs space-y-1">
@@ -785,8 +816,8 @@ export default function Dashboard({ groupId }: DashboardProps) {
                     }}
                   />
                   <YAxis />
-                  <Tooltip 
-                    formatter={(value, name) => {
+                  <RechartsTooltip 
+                    formatter={(value: any, name: any) => {
                       const formattedValue = comparisonMetric === "sales" ? `€${value}` : value;
                       const nameStr = String(name);
                       if (nameStr.startsWith('control_')) {
@@ -916,7 +947,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip formatter={(value) => `${value} units`} />
+                  <RechartsTooltip formatter={(value: any) => `${value} units`} />
                   <Bar dataKey="value" name="Units" isAnimationActive={false}>
                     {(() => {
                       const chartData = [];
@@ -995,7 +1026,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip formatter={(value) => `€${value}`} />
+                  <RechartsTooltip formatter={(value: any) => `€${value}`} />
                   <Bar dataKey="value" name="Sales" isAnimationActive={false}>
                     {(() => {
                       const chartData = [];
@@ -1074,7 +1105,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip formatter={(value) => `€${value}`} />
+                  <RechartsTooltip formatter={(value) => `€${value}`} />
                   <Bar dataKey="value" name="CM" isAnimationActive={false}>
                     {(() => {
                       const chartData = [];
@@ -1181,7 +1212,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
                                 <Cell key={`cell-${index}`} fill={ASIN_COLORS[index % ASIN_COLORS.length]} />
                               ))}
                             </Pie>
-                            <Tooltip 
+                            <RechartsTooltip 
                               formatter={(value) => `${value} units`}
                               labelFormatter={(name) => `ASIN: ${name}`}
                             />
@@ -1246,7 +1277,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
                                   <Cell key={`cell-${index}`} fill={ASIN_COLORS[index % ASIN_COLORS.length]} />
                                 ))}
                               </Pie>
-                              <Tooltip 
+                              <RechartsTooltip 
                                 formatter={(value) => `${value} units`}
                                 labelFormatter={(name) => `ASIN: ${name}`}
                               />
@@ -1318,7 +1349,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
                   }}
                 />
                 <YAxis type="number" />
-                <Tooltip 
+                <RechartsTooltip 
                   formatter={(value, name) => {
                     if (name === 'control') return [`${value} units`, 'Control'];
                     const testName = priceTests.find(test => test.id === name)?.name || name;
@@ -1406,7 +1437,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
                   }}
                 />
                 <YAxis type="number" />
-                <Tooltip 
+                <RechartsTooltip 
                   formatter={(value, name) => {
                     if (name === 'control') return [`€${value}`, 'Control'];
                     const testName = priceTests.find(test => test.id === name)?.name || name;
@@ -1494,7 +1525,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
                   }}
                 />
                 <YAxis type="number" />
-                <Tooltip 
+                <RechartsTooltip 
                   formatter={(value, name) => {
                     if (name === 'control') return [`€${value}`, 'Control'];
                     const testName = priceTests.find(test => test.id === name)?.name || name;
@@ -1539,5 +1570,6 @@ export default function Dashboard({ groupId }: DashboardProps) {
         </div>
       )}
     </div>
+    </TooltipProvider>
   );
 }

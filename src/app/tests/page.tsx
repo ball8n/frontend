@@ -12,11 +12,7 @@ import { AddTestDialog } from "./add-test-dialog";
 import { createPriceTest, fetchPriceTest } from "@/lib/api";
 // Import the PriceInfo type (assuming it's exported or defined accessible)
 // If not exported from CreateTestDialog, might need to define it here or in a shared types file.
-type ProductPriceInfo = {
-    productId: string;
-    controlPrice: number | null;
-    testPrice: number | null;
-}
+
 
 export default function TestsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);

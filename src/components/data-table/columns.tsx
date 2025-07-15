@@ -108,6 +108,7 @@ export type Product = {
 export type PriceTest = {
   id: string;
   name: string;
+  group: string;
   start_date: string; // Keep as string if data source is string
   end_date: string;   // Keep as string if data source is string
   status: "completed" | "running" | "paused" | "scheduled" | "cancelled";
@@ -162,6 +163,13 @@ export const priceTestColumns: ColumnDef<PriceTest>[] = [
       filterable: true,
       filterType: "string",
     }
+  },
+  {
+    accessorKey: "group",
+    header: "Group Name",
+    cell: ({ row }) => (
+      <span className="font-medium">{row.original.group}</span>
+    ),
   },
   {
     accessorKey: "start_date",

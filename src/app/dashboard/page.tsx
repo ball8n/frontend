@@ -28,6 +28,13 @@ export default function DashboardPage() {
       try {
         const groups = await fetchTestGroups();
         setTestGroups(groups);
+        
+        // Auto-select the first active group
+        const activeGroups = groups.filter(group => group.is_active);
+        if (activeGroups.length > 0) {
+          setSelectedGroup(activeGroups[0].id);
+        }
+        
         setIsLoading(false);
       } catch (err) {
         setError('Failed to load test groups');
