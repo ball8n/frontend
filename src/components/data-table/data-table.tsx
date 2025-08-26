@@ -25,7 +25,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { Input } from "@/components/ui/input"
 import {
@@ -434,33 +433,31 @@ export function DataTable<TData, TValue>({
       {/* Custom built table */}
       <div>
         <div className="rounded-md border">
-          {/* Fixed Header */}
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        <div>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </div>
-                      </TableHead>
-                    )
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-          </Table>
-          
-          {/* Scrollable Body */}
-          <ScrollArea className={maxHeight}>
-            <Table>
+          <div className={`relative ${maxHeight} overflow-y-auto`}>
+            <table className="w-full caption-bottom text-sm relative">
+              {/* Fixed Header */}
+              <TableHeader className="sticky top-0 z-10 bg-background">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead key={header.id} className="bg-background border-b">
+                          <div>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </div>
+                        </TableHead>
+                      )
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              
+              {/* Scrollable Body */}
               <TableBody>
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
@@ -483,8 +480,8 @@ export function DataTable<TData, TValue>({
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
-          </ScrollArea>
+            </table>
+          </div>
         </div>
          <div className="flex items-center justify-between py-4">
             <div className="text-sm text-muted-foreground flex-1">
