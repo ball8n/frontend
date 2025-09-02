@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie, Sector } from 'recharts';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie, Sector, LabelList } from 'recharts';
 import { fetchTestGroupById, fetchPriceTestsByGroup, fetchPriceTestSales, fetchPriceTestSalesByDate, fetchPriceTestSalesByAsin } from "@/lib/api";
 import { ProductGroupInfo, PriceTest } from "@/components/data-table/columns";
 
@@ -86,16 +87,33 @@ export default function Dashboard({ groupId }: DashboardProps) {
       try {
         const tests = await fetchPriceTestsByGroup(groupId);
         setPriceTests(tests);
-        // Auto-select the first test if available
+        // Auto-select the last completed test if available
         if (tests.length > 0) {
-          console.log('Auto-selecting first test:', tests[0]);
-          setSelectedTestPeriods([tests[0].id]);
-          // Set control price test ID from the first test
-          if (tests[0].control_price_test_id) {
-            console.log('Initial control price test ID:', tests[0].control_price_test_id);
-            setControlPriceTestId(tests[0].control_price_test_id);
+          // Filter for completed tests
+          const completedTests = tests.filter(test => test.status === "completed");
+          
+          let selectedTest;
+          if (completedTests.length > 0) {
+            // Find the most recent completed test by end date
+            selectedTest = completedTests.reduce((latest, current) => {
+              const latestEndDate = new Date(latest.end_date);
+              const currentEndDate = new Date(current.end_date);
+              return currentEndDate > latestEndDate ? current : latest;
+            });
+            console.log('Auto-selecting last completed test:', selectedTest);
           } else {
-            console.log('No control_price_test_id in first test');
+            // Fallback to first test if no completed tests
+            selectedTest = tests[0];
+            console.log('No completed tests found, auto-selecting first test:', selectedTest);
+          }
+          
+          setSelectedTestPeriods([selectedTest.id]);
+          // Set control price test ID from the selected test
+          if (selectedTest.control_price_test_id) {
+            console.log('Initial control price test ID:', selectedTest.control_price_test_id);
+            setControlPriceTestId(selectedTest.control_price_test_id);
+          } else {
+            console.log('No control_price_test_id in selected test');
             setControlPriceTestId(null);
           }
         } else {
@@ -278,34 +296,43 @@ export default function Dashboard({ groupId }: DashboardProps) {
       const asinData: any = { asin };
       
       // Add control data
+      let controlValue = 0;
       if (controlPriceTestId && asinSalesData[controlPriceTestId]) {
         const controlAsinData = asinSalesData[controlPriceTestId].find((item: any) => item.key === asin);
         if (metric === 'units') {
-          asinData.control = controlAsinData?.data?.total_units || 0;
+          controlValue = controlAsinData?.data?.total_units || 0;
         } else if (metric === 'sales') {
-          asinData.control = controlAsinData?.data?.total_sales || 0;
+          controlValue = controlAsinData?.data?.total_sales || 0;
         } else if (metric === 'cm') {
           // Use sales as placeholder for contribution margin
-          asinData.control = controlAsinData?.data?.total_sales || 0;
+          controlValue = controlAsinData?.data?.total_sales || 0;
         }
+        asinData.control = controlValue;
       } else {
         asinData.control = 0;
       }
       
-      // Add test period data
+      // Add test period data and percentage changes
       selectedTestPeriods.forEach(period => {
         if (asinSalesData[period]) {
           const testAsinData = asinSalesData[period].find((item: any) => item.key === asin);
+          let testValue = 0;
           if (metric === 'units') {
-            asinData[period] = testAsinData?.data?.total_units || 0;
+            testValue = testAsinData?.data?.total_units || 0;
           } else if (metric === 'sales') {
-            asinData[period] = testAsinData?.data?.total_sales || 0;
+            testValue = testAsinData?.data?.total_sales || 0;
           } else if (metric === 'cm') {
             // Use sales as placeholder for contribution margin
-            asinData[period] = testAsinData?.data?.total_sales || 0;
+            testValue = testAsinData?.data?.total_sales || 0;
           }
+          asinData[period] = testValue;
+          
+          // Calculate percentage change
+          const percentageChange = controlValue > 0 ? ((testValue - controlValue) / controlValue) * 100 : 0;
+          asinData[`${period}_percentage`] = percentageChange;
         } else {
           asinData[period] = 0;
+          asinData[`${period}_percentage`] = 0;
         }
       });
       
@@ -396,7 +423,8 @@ export default function Dashboard({ groupId }: DashboardProps) {
 
 
   return (
-    <div className="space-y-6">
+    <TooltipProvider>
+      <div className="space-y-6">
       {/* Group Info */}
       <Card>
         <CardHeader>
@@ -483,11 +511,11 @@ export default function Dashboard({ groupId }: DashboardProps) {
             <div className="text-sm text-muted-foreground">No price tests found for this group</div>
           ) : (
             <div className={`grid gap-4 ${
-              priceTests.length <= 3 ? 'md:grid-cols-3' : 
-              priceTests.length === 4 ? 'md:grid-cols-4' : 
+              priceTests.filter(test => test.status !== 'scheduled').length <= 3 ? 'md:grid-cols-3' : 
+              priceTests.filter(test => test.status !== 'scheduled').length === 4 ? 'md:grid-cols-4' : 
               'md:grid-cols-5'
             }`}>
-              {priceTests.map((test, index) => (
+              {priceTests.filter(test => test.status !== 'scheduled').map((test, index) => (
                 <Card key={test.id} className={`border-l-4 ${selectedTestPeriods.includes(test.id) ? `border-l-[${getTestPeriodColor(test.id)}] bg-opacity-10 bg-[${getTestPeriodColor(test.id)}]` : 'border-l-gray-200'}`}>
                   <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between">
                     <div>
@@ -509,15 +537,27 @@ export default function Dashboard({ groupId }: DashboardProps) {
                       </CardDescription>
                     </div>
                     <div className="flex items-center h-5">
-                      <Checkbox 
-                        id={`test-${test.id}`} 
-                        checked={selectedTestPeriods.includes(test.id)}
-                        onCheckedChange={() => toggleTestPeriod(test.id)}
-                        disabled={
-                          (selectedTestPeriods.includes(test.id) && selectedTestPeriods.length === 1) || 
-                          (!selectedTestPeriods.includes(test.id) && selectedTestPeriods.length >= 3)
-                        }
-                      />
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <Checkbox 
+                                id={`test-${test.id}`} 
+                                checked={selectedTestPeriods.includes(test.id)}
+                                onCheckedChange={() => toggleTestPeriod(test.id)}
+                                disabled={
+                                  (selectedTestPeriods.includes(test.id) && selectedTestPeriods.length === 1) || 
+                                  (!selectedTestPeriods.includes(test.id) && selectedTestPeriods.length >= 3)
+                                }
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          {((selectedTestPeriods.includes(test.id) && selectedTestPeriods.length === 1) || 
+                            (!selectedTestPeriods.includes(test.id) && selectedTestPeriods.length >= 3)) && (
+                            <TooltipContent>
+                              <p>select a different test to unselect this one.</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 pt-2 text-xs space-y-1">
@@ -785,8 +825,8 @@ export default function Dashboard({ groupId }: DashboardProps) {
                     }}
                   />
                   <YAxis />
-                  <Tooltip 
-                    formatter={(value, name) => {
+                  <RechartsTooltip 
+                    formatter={(value: any, name: any) => {
                       const formattedValue = comparisonMetric === "sales" ? `€${value}` : value;
                       const nameStr = String(name);
                       if (nameStr.startsWith('control_')) {
@@ -885,14 +925,16 @@ export default function Dashboard({ groupId }: DashboardProps) {
                 <BarChart
                   data={(() => {
                     const chartData = [];
+                    let controlTotalUnits = 0;
                     
                     // Add control data
                     if (controlPriceTestId && salesData[controlPriceTestId]) {
-                      const controlTotalUnits = salesData[controlPriceTestId].reduce((sum: number, item: any) => sum + (item.data?.total_units || 0), 0);
+                      controlTotalUnits = salesData[controlPriceTestId].reduce((sum: number, item: any) => sum + (item.data?.total_units || 0), 0);
                       chartData.push({
                         name: 'Control',
                         value: controlTotalUnits,
-                        fill: CONTROL_COLOR
+                        fill: CONTROL_COLOR,
+                        percentageChange: null
                       });
                     }
                     
@@ -901,33 +943,37 @@ export default function Dashboard({ groupId }: DashboardProps) {
                       if (salesData[period]) {
                         const testTotalUnits = salesData[period].reduce((sum: number, item: any) => sum + (item.data?.total_units || 0), 0);
                         const testName = priceTests.find(test => test.id === period)?.name || period;
+                        const percentageChange = controlTotalUnits > 0 ? ((testTotalUnits - controlTotalUnits) / controlTotalUnits) * 100 : 0;
                         chartData.push({
                           name: testName,
                           value: testTotalUnits,
-                          fill: getTestPeriodColor(period)
+                          fill: getTestPeriodColor(period),
+                          percentageChange: percentageChange
                         });
                       }
                     });
                     
                     return chartData;
                   })()}
-                  margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
+                  margin={{ top: 30, right: 10, left: 10, bottom: 20 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip formatter={(value) => `${value} units`} />
+                  <RechartsTooltip formatter={(value: any) => `${value} units`} />
                   <Bar dataKey="value" name="Units" isAnimationActive={false}>
                     {(() => {
                       const chartData = [];
+                      let controlTotalUnits = 0;
                       
                       // Add control data
                       if (controlPriceTestId && salesData[controlPriceTestId]) {
-                        const controlTotalUnits = salesData[controlPriceTestId].reduce((sum: number, item: any) => sum + (item.data?.total_units || 0), 0);
+                        controlTotalUnits = salesData[controlPriceTestId].reduce((sum: number, item: any) => sum + (item.data?.total_units || 0), 0);
                         chartData.push({
                           name: 'Control',
                           value: controlTotalUnits,
-                          fill: CONTROL_COLOR
+                          fill: CONTROL_COLOR,
+                          percentageChange: null
                         });
                       }
                       
@@ -936,10 +982,12 @@ export default function Dashboard({ groupId }: DashboardProps) {
                         if (salesData[period]) {
                           const testTotalUnits = salesData[period].reduce((sum: number, item: any) => sum + (item.data?.total_units || 0), 0);
                           const testName = priceTests.find(test => test.id === period)?.name || period;
+                          const percentageChange = controlTotalUnits > 0 ? ((testTotalUnits - controlTotalUnits) / controlTotalUnits) * 100 : 0;
                           chartData.push({
                             name: testName,
                             value: testTotalUnits,
-                            fill: getTestPeriodColor(period)
+                            fill: getTestPeriodColor(period),
+                            percentageChange: percentageChange
                           });
                         }
                       });
@@ -948,6 +996,20 @@ export default function Dashboard({ groupId }: DashboardProps) {
                         <Cell key={`cell-${index}`} fill={entry.fill} />
                       ));
                     })()}
+                    <LabelList 
+                      dataKey="percentageChange" 
+                      position="top" 
+                      formatter={(value: any) => {
+                        if (value === null) return '';
+                        const num = parseFloat(value);
+                        return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
+                      }}
+                      style={{ 
+                        fontSize: '12px', 
+                        fontWeight: 'bold',
+                        fill: '#374151'
+                      }}
+                    />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -964,14 +1026,16 @@ export default function Dashboard({ groupId }: DashboardProps) {
                 <BarChart
                   data={(() => {
                     const chartData = [];
+                    let controlTotalSales = 0;
                     
                     // Add control data
                     if (controlPriceTestId && salesData[controlPriceTestId]) {
-                      const controlTotalSales = salesData[controlPriceTestId].reduce((sum: number, item: any) => sum + (item.data?.total_sales || 0), 0);
+                      controlTotalSales = salesData[controlPriceTestId].reduce((sum: number, item: any) => sum + (item.data?.total_sales || 0), 0);
                       chartData.push({
                         name: 'Control',
                         value: controlTotalSales,
-                        fill: CONTROL_COLOR
+                        fill: CONTROL_COLOR,
+                        percentageChange: null
                       });
                     }
                     
@@ -980,33 +1044,37 @@ export default function Dashboard({ groupId }: DashboardProps) {
                       if (salesData[period]) {
                         const testTotalSales = salesData[period].reduce((sum: number, item: any) => sum + (item.data?.total_sales || 0), 0);
                         const testName = priceTests.find(test => test.id === period)?.name || period;
+                        const percentageChange = controlTotalSales > 0 ? ((testTotalSales - controlTotalSales) / controlTotalSales) * 100 : 0;
                         chartData.push({
                           name: testName,
                           value: testTotalSales,
-                          fill: getTestPeriodColor(period)
+                          fill: getTestPeriodColor(period),
+                          percentageChange: percentageChange
                         });
                       }
                     });
                     
                     return chartData;
                   })()}
-                  margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
+                  margin={{ top: 30, right: 10, left: 10, bottom: 20 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip formatter={(value) => `€${value}`} />
+                  <RechartsTooltip formatter={(value: any) => `€${value}`} />
                   <Bar dataKey="value" name="Sales" isAnimationActive={false}>
                     {(() => {
                       const chartData = [];
+                      let controlTotalSales = 0;
                       
                       // Add control data
                       if (controlPriceTestId && salesData[controlPriceTestId]) {
-                        const controlTotalSales = salesData[controlPriceTestId].reduce((sum: number, item: any) => sum + (item.data?.total_sales || 0), 0);
+                        controlTotalSales = salesData[controlPriceTestId].reduce((sum: number, item: any) => sum + (item.data?.total_sales || 0), 0);
                         chartData.push({
                           name: 'Control',
                           value: controlTotalSales,
-                          fill: CONTROL_COLOR
+                          fill: CONTROL_COLOR,
+                          percentageChange: null
                         });
                       }
                       
@@ -1015,10 +1083,12 @@ export default function Dashboard({ groupId }: DashboardProps) {
                         if (salesData[period]) {
                           const testTotalSales = salesData[period].reduce((sum: number, item: any) => sum + (item.data?.total_sales || 0), 0);
                           const testName = priceTests.find(test => test.id === period)?.name || period;
+                          const percentageChange = controlTotalSales > 0 ? ((testTotalSales - controlTotalSales) / controlTotalSales) * 100 : 0;
                           chartData.push({
                             name: testName,
                             value: testTotalSales,
-                            fill: getTestPeriodColor(period)
+                            fill: getTestPeriodColor(period),
+                            percentageChange: percentageChange
                           });
                         }
                       });
@@ -1027,6 +1097,20 @@ export default function Dashboard({ groupId }: DashboardProps) {
                         <Cell key={`cell-${index}`} fill={entry.fill} />
                       ));
                     })()}
+                    <LabelList 
+                      dataKey="percentageChange" 
+                      position="top" 
+                      formatter={(value: any) => {
+                        if (value === null) return '';
+                        const num = parseFloat(value);
+                        return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
+                      }}
+                      style={{ 
+                        fontSize: '12px', 
+                        fontWeight: 'bold',
+                        fill: '#374151'
+                      }}
+                    />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -1043,14 +1127,16 @@ export default function Dashboard({ groupId }: DashboardProps) {
                 <BarChart
                   data={(() => {
                     const chartData = [];
+                    let controlTotalSales = 0;
                     
                     // Add control data (using sales as placeholder for contribution margin)
                     if (controlPriceTestId && salesData[controlPriceTestId]) {
-                      const controlTotalSales = salesData[controlPriceTestId].reduce((sum: number, item: any) => sum + (item.data?.total_sales || 0), 0);
+                      controlTotalSales = salesData[controlPriceTestId].reduce((sum: number, item: any) => sum + (item.data?.total_sales || 0), 0);
                       chartData.push({
                         name: 'Control',
                         value: controlTotalSales,
-                        fill: CONTROL_COLOR
+                        fill: CONTROL_COLOR,
+                        percentageChange: null
                       });
                     }
                     
@@ -1059,33 +1145,37 @@ export default function Dashboard({ groupId }: DashboardProps) {
                       if (salesData[period]) {
                         const testTotalSales = salesData[period].reduce((sum: number, item: any) => sum + (item.data?.total_sales || 0), 0);
                         const testName = priceTests.find(test => test.id === period)?.name || period;
+                        const percentageChange = controlTotalSales > 0 ? ((testTotalSales - controlTotalSales) / controlTotalSales) * 100 : 0;
                         chartData.push({
                           name: testName,
                           value: testTotalSales,
-                          fill: getTestPeriodColor(period)
+                          fill: getTestPeriodColor(period),
+                          percentageChange: percentageChange
                         });
                       }
                     });
                     
                     return chartData;
                   })()}
-                  margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
+                  margin={{ top: 30, right: 10, left: 10, bottom: 20 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip formatter={(value) => `€${value}`} />
+                  <RechartsTooltip formatter={(value) => `€${value}`} />
                   <Bar dataKey="value" name="CM" isAnimationActive={false}>
                     {(() => {
                       const chartData = [];
+                      let controlTotalSales = 0;
                       
                       // Add control data
                       if (controlPriceTestId && salesData[controlPriceTestId]) {
-                        const controlTotalSales = salesData[controlPriceTestId].reduce((sum: number, item: any) => sum + (item.data?.total_sales || 0), 0);
+                        controlTotalSales = salesData[controlPriceTestId].reduce((sum: number, item: any) => sum + (item.data?.total_sales || 0), 0);
                         chartData.push({
                           name: 'Control',
                           value: controlTotalSales,
-                          fill: CONTROL_COLOR
+                          fill: CONTROL_COLOR,
+                          percentageChange: null
                         });
                       }
                       
@@ -1094,10 +1184,12 @@ export default function Dashboard({ groupId }: DashboardProps) {
                         if (salesData[period]) {
                           const testTotalSales = salesData[period].reduce((sum: number, item: any) => sum + (item.data?.total_sales || 0), 0);
                           const testName = priceTests.find(test => test.id === period)?.name || period;
+                          const percentageChange = controlTotalSales > 0 ? ((testTotalSales - controlTotalSales) / controlTotalSales) * 100 : 0;
                           chartData.push({
                             name: testName,
                             value: testTotalSales,
-                            fill: getTestPeriodColor(period)
+                            fill: getTestPeriodColor(period),
+                            percentageChange: percentageChange
                           });
                         }
                       });
@@ -1106,6 +1198,20 @@ export default function Dashboard({ groupId }: DashboardProps) {
                         <Cell key={`cell-${index}`} fill={entry.fill} />
                       ));
                     })()}
+                    <LabelList 
+                      dataKey="percentageChange" 
+                      position="top" 
+                      formatter={(value: any) => {
+                        if (value === null) return '';
+                        const num = parseFloat(value);
+                        return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
+                      }}
+                      style={{ 
+                        fontSize: '12px', 
+                        fontWeight: 'bold',
+                        fill: '#374151'
+                      }}
+                    />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -1181,7 +1287,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
                                 <Cell key={`cell-${index}`} fill={ASIN_COLORS[index % ASIN_COLORS.length]} />
                               ))}
                             </Pie>
-                            <Tooltip 
+                            <RechartsTooltip 
                               formatter={(value) => `${value} units`}
                               labelFormatter={(name) => `ASIN: ${name}`}
                             />
@@ -1246,7 +1352,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
                                   <Cell key={`cell-${index}`} fill={ASIN_COLORS[index % ASIN_COLORS.length]} />
                                 ))}
                               </Pie>
-                              <Tooltip 
+                              <RechartsTooltip 
                                 formatter={(value) => `${value} units`}
                                 labelFormatter={(name) => `ASIN: ${name}`}
                               />
@@ -1292,7 +1398,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={createAsinBarChartData('units')}
-                margin={{ top: 20, right: 30, left: 30, bottom: 70 }}
+                margin={{ top: 40, right: 30, left: 30, bottom: 70 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
@@ -1318,7 +1424,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
                   }}
                 />
                 <YAxis type="number" />
-                <Tooltip 
+                <RechartsTooltip 
                   formatter={(value, name) => {
                     if (name === 'control') return [`${value} units`, 'Control'];
                     const testName = priceTests.find(test => test.id === name)?.name || name;
@@ -1342,8 +1448,23 @@ export default function Dashboard({ groupId }: DashboardProps) {
                       key={period} 
                       dataKey={period} 
                       name={period} 
-                      fill={getTestPeriodColor(period)} 
-                    />
+                      fill={getTestPeriodColor(period)}
+                    >
+                      <LabelList 
+                        dataKey={`${period}_percentage`}
+                        position="top" 
+                        formatter={(value: any) => {
+                          const num = parseFloat(value);
+                          if (num === 0) return '';
+                          return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
+                        }}
+                        style={{ 
+                          fontSize: '10px', 
+                          fontWeight: 'bold',
+                          fill: '#374151'
+                        }}
+                      />
+                    </Bar>
                   )
                 ))}
               </BarChart>
@@ -1380,7 +1501,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={createAsinBarChartData('sales')}
-                margin={{ top: 20, right: 30, left: 30, bottom: 70 }}
+                margin={{ top: 40, right: 30, left: 30, bottom: 70 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
@@ -1406,7 +1527,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
                   }}
                 />
                 <YAxis type="number" />
-                <Tooltip 
+                <RechartsTooltip 
                   formatter={(value, name) => {
                     if (name === 'control') return [`€${value}`, 'Control'];
                     const testName = priceTests.find(test => test.id === name)?.name || name;
@@ -1430,8 +1551,23 @@ export default function Dashboard({ groupId }: DashboardProps) {
                       key={period} 
                       dataKey={period} 
                       name={period} 
-                      fill={getTestPeriodColor(period)} 
-                    />
+                      fill={getTestPeriodColor(period)}
+                    >
+                      <LabelList 
+                        dataKey={`${period}_percentage`}
+                        position="top" 
+                        formatter={(value: any) => {
+                          const num = parseFloat(value);
+                          if (num === 0) return '';
+                          return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
+                        }}
+                        style={{ 
+                          fontSize: '10px', 
+                          fontWeight: 'bold',
+                          fill: '#374151'
+                        }}
+                      />
+                    </Bar>
                   )
                 ))}
               </BarChart>
@@ -1468,7 +1604,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={createAsinBarChartData('cm')}
-                margin={{ top: 20, right: 30, left: 30, bottom: 70 }}
+                margin={{ top: 40, right: 30, left: 30, bottom: 70 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
@@ -1494,7 +1630,7 @@ export default function Dashboard({ groupId }: DashboardProps) {
                   }}
                 />
                 <YAxis type="number" />
-                <Tooltip 
+                <RechartsTooltip 
                   formatter={(value, name) => {
                     if (name === 'control') return [`€${value}`, 'Control'];
                     const testName = priceTests.find(test => test.id === name)?.name || name;
@@ -1518,8 +1654,23 @@ export default function Dashboard({ groupId }: DashboardProps) {
                       key={period} 
                       dataKey={period} 
                       name={period} 
-                      fill={getTestPeriodColor(period)} 
-                    />
+                      fill={getTestPeriodColor(period)}
+                    >
+                      <LabelList 
+                        dataKey={`${period}_percentage`}
+                        position="top" 
+                        formatter={(value: any) => {
+                          const num = parseFloat(value);
+                          if (num === 0) return '';
+                          return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`;
+                        }}
+                        style={{ 
+                          fontSize: '10px', 
+                          fontWeight: 'bold',
+                          fill: '#374151'
+                        }}
+                      />
+                    </Bar>
                   )
                 ))}
               </BarChart>
@@ -1539,5 +1690,6 @@ export default function Dashboard({ groupId }: DashboardProps) {
         </div>
       )}
     </div>
+    </TooltipProvider>
   );
 }

@@ -48,7 +48,11 @@ export default function ProductsPage() {
             {loading && <p>Loading products...</p>}
             {error && <p className="text-red-500">Error: {error}</p>}
             {!loading && !error && (
-              <DataTable columns={productColumns} data={data} />
+              <DataTable 
+                columns={productColumns} 
+                data={data} 
+                maxHeight="h-[500px] max-h-[60vh]"
+              />
             )}
           </CardContent>
         </Card>

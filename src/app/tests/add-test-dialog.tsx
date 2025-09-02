@@ -34,17 +34,19 @@ import { TestGroup, ProductGroupItem, ProductPricing, createProductPricingColumn
 import { fetchTestGroups, fetchTestGroupById } from "@/lib/api"
 import { DataTable } from "@/components/data-table/data-table"
 
-// Type for passing price updates
-type ProductPriceInfo = {
-    productId: string;
-    controlPrice: number | null; // Use number | null for parsed floats
-    testPrice: number | null;    // Use number | null for parsed floats
+
+
+interface ProductInfo {
+  asin: string;
+  id: string;
+  control_price: number | null;
+  test_price_1: number | null;
 }
 
 interface AddTestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddTest: (name: string, testGroupId: string, startDate: Date, endDate: Date, items: string[]) => void;
+  onAddTest: (name: string, testGroupId: string, startDate: Date, endDate: Date, items: ProductInfo[]) => void;
 }
 
 export function AddTestDialog({ open, onOpenChange, onAddTest }: AddTestDialogProps) {
@@ -53,7 +55,7 @@ export function AddTestDialog({ open, onOpenChange, onAddTest }: AddTestDialogPr
   const [startDate, setStartDate] = React.useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = React.useState<Date | undefined>(undefined);
   const [selectedGroupId, setSelectedGroupId] = React.useState<string | undefined>(undefined);
-  const [items, setItems] = React.useState<string[]>([]);
+  const [items, setItems] = React.useState<ProductInfo[]>([]);
   
   // State for API-fetched test groups
   const [apiTestGroups, setApiTestGroups] = useState<TestGroup[]>([]);
@@ -208,35 +210,32 @@ export function AddTestDialog({ open, onOpenChange, onAddTest }: AddTestDialogPr
   const pricingColumns = React.useMemo(() => createProductPricingColumns(handlePriceChange), []);
 
   const handleSubmit = () => {
-    setItems(products.map(product => product.id));
-    // Validation happens on Page 1 navigation
-
-    // Convert string prices from state to numbers for submission
-    // const priceUpdates: ProductPriceInfo[] = products.map(product => {
-    //     const prices = editablePrices[product.id] || { controlPrice: '', testPrice: '' };
-        
-    //     const controlPriceString = prices.controlPrice;
-    //     const testPriceString = prices.testPrice;
-
-    //     // Parse strings to float, default to null if empty or invalid
-    //     const controlPriceNum = controlPriceString !== '' ? parseFloat(controlPriceString) : null;
-    //     const testPriceNum = testPriceString !== '' ? parseFloat(testPriceString) : null;
-
-    //     return {
-    //         productId: product.id,
-    //         controlPrice: (controlPriceNum !== null && !isNaN(controlPriceNum)) ? controlPriceNum : null,
-    //         testPrice: (testPriceNum !== null && !isNaN(testPriceNum)) ? testPriceNum : null
-    //     };
-    // });
+    // Map products to dictionaries with asin, id, control price, and test price
+    const productDictionaries = products.map(product => {
+      const prices = editablePrices[product.id] || { controlPrice: '', testPrice: '' };
+      
+      // Parse strings to float, default to original price for control, null for test if empty
+      const controlPriceNum = prices.controlPrice !== '' ? parseFloat(prices.controlPrice) : product.price || 0;
+      const testPriceNum = prices.testPrice !== '' ? parseFloat(prices.testPrice) : null;
+      
+      return {
+        asin: product.asin,
+        id: product.id,
+        control_price: (controlPriceNum !== null && !isNaN(controlPriceNum)) ? controlPriceNum : product.price || null,
+        test_price_1: (testPriceNum !== null && !isNaN(testPriceNum)) ? testPriceNum : null
+      };
+    });
+    
+    setItems(productDictionaries);
 
     // Pass the structured price data along with other test details
-    onAddTest(priceTestName, selectedGroupId!, startDate!, endDate!, items);
+    onAddTest(priceTestName, selectedGroupId!, startDate!, endDate!, productDictionaries);
     onOpenChange(false); // Close dialog
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl rounded-lg"> {/* Increased width further */}
+      <DialogContent className="sm:max-w-2xl rounded-lg" onClose={() => onOpenChange(false)}> {/* Increased width further */}
         <DialogHeader>
           <DialogTitle>
             {currentPage === 1 ? "Create New Price Test (Step 1/2)" : `Review Products for "${selectedGroup?.name ?? ''}" (Step 2/2)`}

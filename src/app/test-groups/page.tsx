@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import AppShell from "@/components/app-shell";
 import { DataTable } from "@/components/data-table/data-table";
-import { TestGroup, testGroupColumns } from "@/components/data-table/columns";
+import { TestGroup, createTestGroupColumns } from "@/components/data-table/columns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -11,6 +12,7 @@ import { AddGroupDialog } from "./add-group-dialog";
 import { fetchTestGroups, createTestGroup } from "@/lib/api";
 
 export default function TestGroupsPage() {
+  const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [data, setData] = useState<TestGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +53,17 @@ export default function TestGroupsPage() {
     }
   };
 
+  const handleViewDashboard = (groupId: string) => {
+    router.push(`/dashboard?groupId=${groupId}`);
+  };
+
+  const handleViewDetails = (groupId: string) => {
+    router.push(`/test-groups/${groupId}`);
+  };
+
+  // Create columns with the navigation handlers
+  const columns = createTestGroupColumns(handleViewDashboard, handleViewDetails);
+
   return (
     <AppShell>
       <div className="container px-4 py-6 lg:px-8 space-y-6">
@@ -83,7 +96,11 @@ export default function TestGroupsPage() {
             {loading && <p>Loading test groups...</p>}
             {error && <p className="text-red-500">Error: {error}</p>}
             {!loading && !error && (
-              <DataTable data={data} columns={testGroupColumns} />
+                          <DataTable 
+              data={data} 
+              columns={columns} 
+              maxHeight=""
+            />
             )}
           </CardContent>
         </Card>

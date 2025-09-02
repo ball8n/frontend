@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
 import AppShell from '@/components/app-shell';
@@ -17,7 +18,8 @@ const Dashboard = dynamic(() => import('@/components/dashboard/dashboard'), {
 
 import DashboardSkeleton from '@/components/dashboard/dashboard-skeleton';
 
-export default function DashboardPage() {
+function DashboardContent() {
+  const searchParams = useSearchParams();
   const [testGroups, setTestGroups] = useState<TestGroup[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
@@ -28,6 +30,30 @@ export default function DashboardPage() {
       try {
         const groups = await fetchTestGroups();
         setTestGroups(groups);
+        
+        // Check if groupId is provided in URL params
+        const groupIdFromUrl = searchParams.get('groupId');
+        
+        if (groupIdFromUrl) {
+          // Verify the group exists and is active
+          const targetGroup = groups.find(group => group.id === groupIdFromUrl && group.is_active);
+          if (targetGroup) {
+            setSelectedGroup(groupIdFromUrl);
+          } else {
+            // Fall back to auto-selecting the first active group
+            const activeGroups = groups.filter(group => group.is_active);
+            if (activeGroups.length > 0) {
+              setSelectedGroup(activeGroups[0].id);
+            }
+          }
+        } else {
+          // Auto-select the first active group
+          const activeGroups = groups.filter(group => group.is_active);
+          if (activeGroups.length > 0) {
+            setSelectedGroup(activeGroups[0].id);
+          }
+        }
+        
         setIsLoading(false);
       } catch (err) {
         setError('Failed to load test groups');
@@ -37,7 +63,7 @@ export default function DashboardPage() {
     };
 
     loadTestGroups();
-  }, []);
+  }, [searchParams]);
 
   if (isLoading) {
     return (
@@ -105,5 +131,13 @@ export default function DashboardPage() {
         )}
       </div>
     </AppShell>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent />
+    </Suspense>
   );
 } 

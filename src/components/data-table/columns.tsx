@@ -2,6 +2,8 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { BarChart3 } from "lucide-react"
 
 export type Product = {
     id: string;
@@ -60,7 +62,7 @@ export type Product = {
       header: "Status",
       cell: ({ row }) => (
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          row.original.status === "Active" 
+          (row.original.status === "Active" || row.original.status === "active")
             ? "bg-green-100 text-green-800" 
             : "bg-gray-100 text-gray-800"
         }`}>
@@ -86,21 +88,70 @@ export type Product = {
     is_active: boolean;
   }
   
-  export const testGroupColumns: ColumnDef<TestGroup>[] = [
-    {
-      accessorKey: "name",
-      header: "Group Name",
-      meta: { // Allow filtering by name
-        filterable: true,
-        filterType: "string",
-      }
+  export const createTestGroupColumns = (
+  onViewDashboard: (groupId: string) => void,
+  onViewDetails?: (groupId: string) => void
+): ColumnDef<TestGroup>[] => [
+  {
+    accessorKey: "name",
+    header: "Group Name",
+    meta: { // Allow filtering by name
+      filterable: true,
+      filterType: "string",
+    }
+  },
+  {
+    accessorKey: "count",
+    header: "Number of Items",
+    // Not filterable by default, add meta if needed
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
+      const handleViewDashboard = () => {
+        onViewDashboard(row.original.id);
+      };
+      
+      const handleViewDetails = () => {
+        onViewDetails?.(row.original.id);
+      };
+      
+      return (
+        <div className="flex items-center gap-2">
+          {onViewDetails && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleViewDetails}
+              className="flex items-center gap-2"
+            >
+              View Details
+            </Button>
+          )}
+        </div>
+      );
     },
-    {
-      accessorKey: "count",
-      header: "Number of Items",
-      // Not filterable by default, add meta if needed
-    },
-  ]
+    enableSorting: false,
+  },
+]
+
+// Keep the original columns for backward compatibility (without actions)
+export const testGroupColumns: ColumnDef<TestGroup>[] = [
+  {
+    accessorKey: "name",
+    header: "Group Name",
+    meta: { // Allow filtering by name
+      filterable: true,
+      filterType: "string",
+    }
+  },
+  {
+    accessorKey: "count",
+    header: "Number of Items",
+    // Not filterable by default, add meta if needed
+  },
+]
 
 // ===================================
 // Price Test Columns
@@ -108,6 +159,8 @@ export type Product = {
 export type PriceTest = {
   id: string;
   name: string;
+  group_id: string;
+  group_name: string;
   start_date: string; // Keep as string if data source is string
   end_date: string;   // Keep as string if data source is string
   status: "completed" | "running" | "paused" | "scheduled" | "cancelled";
@@ -164,6 +217,13 @@ export const priceTestColumns: ColumnDef<PriceTest>[] = [
     }
   },
   {
+    accessorKey: "group",
+    header: "Group Name",
+    cell: ({ row }) => (
+      <span className="font-medium">{row.original.group_name}</span>
+    ),
+  },
+  {
     accessorKey: "start_date",
     header: "Start Date",
     cell: ({ row }) => formatDate(row.original.start_date), 
@@ -203,12 +263,100 @@ export type ProductGroupInfo = {
 
 export type ProductGroupItem = {
   id: string;
-  listing_id: string;
+  seller_sku: string;
   asin: string;
   item_name: string | null;
   price: number | null;
   is_active: boolean;
 }
+
+// ===================================
+// Product Group Item Columns (for individual test group pages)
+// ===================================
+export const createProductGroupItemColumns = (): ColumnDef<ProductGroupItem>[] => [
+  {
+    accessorKey: "asin",
+    header: "ASIN",
+    cell: ({ row }) => (
+      <a href={`https://www.amazon.de/dp/${row.original.asin}`}
+         target="_blank"
+         rel="noopener noreferrer"
+         className="text-blue-600 hover:underline"
+         onClick={(e) => e.stopPropagation()}
+      >
+        {row.original.asin}
+      </a>
+    ),
+    meta: {
+      filterable: true,
+      filterType: "string",
+    }
+  },
+  {
+    accessorKey: "seller_sku",
+    header: "SKU",
+    meta: {
+      filterable: true,
+      filterType: "string",
+    }
+  },
+  {
+    accessorKey: "item_name",
+    header: "Product Name",
+    cell: ({ row }) => {
+      const itemName = row.original.item_name || 'N/A';
+      const maxLength = 50;
+      const truncatedName = itemName.length > maxLength 
+        ? `${itemName.substring(0, maxLength)}...` 
+        : itemName;
+      
+      return (
+        <div className="relative group">
+          <span className="cursor-default">{truncatedName}</span>
+          {itemName.length > maxLength && (
+            <div className="absolute left-0 top-full mt-1 px-2 py-1 bg-black text-white text-sm rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50 max-w-xs whitespace-normal break-words">
+              {itemName}
+            </div>
+          )}
+        </div>
+      );
+    },
+    meta: {
+      filterable: true,
+      filterType: "string",
+    }
+  },
+  {
+    accessorKey: "price",
+    header: "Price",
+    cell: ({ row }) => {
+      const price = row.original.price;
+      return price !== null ? `$${price.toFixed(2)}` : 'N/A';
+    },
+    meta: {
+      filterable: true,
+      filterType: "number",
+    }
+  },
+  {
+    accessorKey: "is_active",
+    header: "Status",
+    cell: ({ row }) => (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+        row.original.is_active
+          ? "bg-green-100 text-green-800" 
+          : "bg-gray-100 text-gray-800"
+      }`}>
+        {row.original.is_active ? 'Active' : 'Inactive'}
+      </span>
+    ),
+    meta: {
+      filterable: true,
+      filterType: "select",
+      filterOptions: ["Active", "Inactive"],
+    }
+  },
+]
 
 // ===================================
 // Product Pricing Columns (for Add Test Dialog)

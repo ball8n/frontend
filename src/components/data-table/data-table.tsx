@@ -66,6 +66,8 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   enableRowSelection?: boolean
   onSelectionChange?: (selectedRows: TData[]) => void
+  maxHeight?: string
+  initialSorting?: SortingState
 }
 
 // Define the select column definition generically
@@ -100,11 +102,14 @@ export function DataTable<TData, TValue>({
   data,
   enableRowSelection = false,
   onSelectionChange,
+  maxHeight = "h-[300px] max-h-[40vh]",
+  initialSorting = [],
 }: DataTableProps<TData, TValue>) {
     // Rename internal state back to regular names
     const [searchQuery, setSearchQuery] = React.useState("")
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]) 
     const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({}) 
+    const [sorting, setSorting] = React.useState<SortingState>(initialSorting)
     // Filter config state remains the same
     const [newFilterColumnId, setNewFilterColumnId] = React.useState<string>("")
     const [selectedColumnMeta, setSelectedColumnMeta] = React.useState<ColumnMetaWithOptions | null>(null);
@@ -125,16 +130,19 @@ export function DataTable<TData, TValue>({
       state: { 
           columnFilters, // Use direct state 
           rowSelection,    // Use direct state
-          globalFilter: searchQuery // Use direct state
+          globalFilter: searchQuery, // Use direct state
+          sorting: sorting // Use sorting state
       },
       onColumnFiltersChange: setColumnFilters, // Set direct state
       onRowSelectionChange: setRowSelection,    // Set direct state
       onGlobalFilterChange: setSearchQuery,   // Set direct state
+      onSortingChange: setSorting, // Use setSorting to update sorting
       // Other options remain the same
       getCoreRowModel: getCoreRowModel(),
       getFilteredRowModel: getFilteredRowModel(), 
       getPaginationRowModel: getPaginationRowModel(),
       getFacetedUniqueValues: getFacetedUniqueValues(),
+      getSortedRowModel: getSortedRowModel(),
       globalFilterFn: "includesString",
       filterFns: { /* ... */ },
       enableMultiRowSelection: enableRowSelection, 
@@ -425,50 +433,55 @@ export function DataTable<TData, TValue>({
       {/* Custom built table */}
       <div>
         <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        <div>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </div>
-                      </TableHead>
-                    )
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-           <TableBody>
-             {table.getRowModel().rows?.length ? (
-               table.getRowModel().rows.map((row) => (
-                 <TableRow
-                   key={row.id}
-                   data-state={row.getIsSelected() && "selected"}
-                 >
-                   {row.getVisibleCells().map((cell) => (
-                     <TableCell key={cell.id}>
-                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                     </TableCell>
-                   ))}
-                 </TableRow>
-               ))
-             ) : (
-               <TableRow>
-                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                   No results.
-                 </TableCell>
-               </TableRow>
-             )}
-           </TableBody>
-         </Table>
+          <div className={`relative ${maxHeight} overflow-y-auto`}>
+            <table className="w-full caption-bottom text-sm relative">
+              {/* Fixed Header */}
+              <TableHeader className="sticky top-0 z-10 bg-background">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead key={header.id} className="bg-background border-b">
+                          <div>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </div>
+                        </TableHead>
+                      )
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              
+              {/* Scrollable Body */}
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </table>
+          </div>
         </div>
          <div className="flex items-center justify-between py-4">
             <div className="text-sm text-muted-foreground flex-1">
