@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo } from "react";
 import AppShell from '@/components/app-shell';
 import { DataTable } from '@/components/data-table/data-table';
-import { tests as initialTestsData } from '@/data/price_tests';
 import { PriceTest, priceTestColumns } from '@/components/data-table/columns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
@@ -89,25 +88,34 @@ export default function TestsPage() {
   };
 
 
-  // Update handleCreateTest to accept the prices array
+  // Define ProductInfo interface to match AddTestDialog
+  interface ProductInfo {
+    asin: string;
+    id: string;
+    control_price: number | null;
+    test_price_1: number | null;
+  }
+
+  // Update handleCreateTest to match AddTestDialog's expected signature
   const handleCreateTest = async (
-    priceTestName: string,
-    groupId: string,
+    name: string,
+    testGroupId: string,
     startDate: Date,
     endDate: Date,
-    items: string[],
-    isControlGroup: boolean = false,
-    controlPriceTestId: string | null = null
-  ): Promise<any> => { // Adjust return type based on API
+    items: ProductInfo[]
+  ): Promise<void> => {
     try {
+      // Convert ProductInfo[] to the format expected by createPriceTest API
+      const itemIds = items.map(item => item.id);
+      
       const createdPriceTest = await createPriceTest(
-        groupId,
-        priceTestName,
+        testGroupId,
+        name,
         startDate,
         endDate,
-        items,
-        isControlGroup,
-        controlPriceTestId
+        itemIds,
+        false, // isControlGroup - default to false
+        null   // controlPriceTestId - default to null
       );
       console.log("API Response (created price test):", createdPriceTest);
       await loadData();
