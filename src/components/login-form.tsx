@@ -10,7 +10,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import Cookies from 'js-cookie';
 import { getAuth, signInWithEmailAndPassword, AuthError, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { app } from "@/lib/firebase";
-import { verifyCredentials } from "@/data/auth";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");

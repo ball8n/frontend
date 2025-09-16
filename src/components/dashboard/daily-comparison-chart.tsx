@@ -11,8 +11,15 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts';
-import { DailyData } from '@/data/dashboard_data';
 import { format, parseISO } from 'date-fns';
+
+// Define the DailyData type locally
+interface DailyData {
+  date: string;
+  units: number;
+  sales: number;
+  test_period: string;
+}
 
 interface DailyComparisonChartProps {
   data: DailyData[];

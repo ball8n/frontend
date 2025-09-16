@@ -263,7 +263,7 @@ export type ProductGroupInfo = {
 
 export type ProductGroupItem = {
   id: string;
-  seller_sku: string;
+  listing_id: string;
   asin: string;
   item_name: string | null;
   price: number | null;

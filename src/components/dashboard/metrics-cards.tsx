@@ -1,8 +1,18 @@
 'use client';
 
-import { DashboardMetrics } from '@/data/dashboard_data';
-// MetricsCards expects a single metrics object, not the entire mapping
-type SingleMetrics = DashboardMetrics[string];
+// Define the metrics types locally
+interface MetricValue {
+  test: number;
+  control: number;
+  delta: number;
+}
+
+interface SingleMetrics {
+  total_units: MetricValue;
+  total_sales: MetricValue;
+  total_cm: MetricValue;
+  avg_price: MetricValue;
+}
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowUpIcon, ArrowDownIcon } from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
