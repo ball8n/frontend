@@ -190,8 +190,8 @@ export async function fetchPriceTestSalesByDate(priceTestId: string): Promise<an
 }
 
 export async function createPriceTest(
-  groupId: string, 
   priceTestName: string, 
+  groupId: string, 
   startDate: Date, 
   endDate: Date, 
   items: string[], 
@@ -207,6 +207,7 @@ export async function createPriceTest(
     is_control_group: isControlGroup,
     control_price_test_id: controlPriceTestId,
   };
+
 
   const response = await fetch(`${BALLOON_BASE_API_URL}/price-test/`, {
     method: 'POST',
