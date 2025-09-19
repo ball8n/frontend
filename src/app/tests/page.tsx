@@ -88,34 +88,29 @@ export default function TestsPage() {
   };
 
 
-  // Define ProductInfo interface to match AddTestDialog
-  interface ProductInfo {
-    asin: string;
-    id: string;
-    control_price: number | null;
-    test_price_1: number | null;
-  }
+
 
   // Update handleCreateTest to match AddTestDialog's expected signature
   const handleCreateTest = async (
-    name: string,
-    testGroupId: string,
+    priceTestName: string,
+    groupId: string,
     startDate: Date,
     endDate: Date,
-    items: ProductInfo[]
-  ): Promise<void> => {
+    items: string[],
+    isControlGroup: boolean = false,
+    controlPriceTestId: string | null = null
+  ): Promise<any> => { // Adjust return type based on API
     try {
       // Convert ProductInfo[] to the format expected by createPriceTest API
-      const itemIds = items.map(item => item.id);
       
       const createdPriceTest = await createPriceTest(
-        testGroupId,
-        name,
+        priceTestName,
+        groupId,
         startDate,
         endDate,
-        itemIds,
-        false, // isControlGroup - default to false
-        null   // controlPriceTestId - default to null
+        items,
+        isControlGroup,
+        controlPriceTestId
       );
       console.log("API Response (created price test):", createdPriceTest);
       await loadData();
