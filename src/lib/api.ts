@@ -1,7 +1,7 @@
 // src/lib/api.ts
 
 // Import types directly
-import { Product, TestGroup, PriceTest, ProductGroupInfo } from "@/components/data-table/columns"; 
+import { Product, TestGroup, PriceTest, ProductGroupInfo, PriceTestItemIn } from "@/components/data-table/columns"; 
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 // Base URL for API requests; set NEXT_PUBLIC_BALLOON_BASE_API_URL in your .env.local to override
 const BALLOON_BASE_API_URL = process.env.NEXT_PUBLIC_BALLOON_BASE_API_URL || "http://localhost:4200";
@@ -38,10 +38,19 @@ async function handleResponse<T>(response: Response): Promise<T> {
     
     throw new Error(`API request failed: ${response.status} ${response.statusText}`);
   }
-  // Handle cases with no content (e.g., 204 No Content)
+  // Handle cases with no content (e.g., 204 No Content, or 201 with empty body)
   if (response.status === 204) {
     return null as T; // Or handle appropriately based on expected return type
   }
+
+  // Check if response has content before parsing JSON
+  const contentLength = response.headers.get('content-length');
+  const contentType = response.headers.get('content-type');
+
+  if (contentLength === '0' || !contentType?.includes('application/json')) {
+    return null as T;
+  }
+
   return response.json() as Promise<T>;
 }
 
@@ -190,12 +199,12 @@ export async function fetchPriceTestSalesByDate(priceTestId: string): Promise<an
 }
 
 export async function createPriceTest(
-  groupId: string, 
-  priceTestName: string, 
-  startDate: Date, 
-  endDate: Date, 
-  items: string[], 
-  isControlGroup: boolean = false, 
+  groupId: string,
+  priceTestName: string,
+  startDate: Date,
+  endDate: Date,
+  items: PriceTestItemIn[],
+  isControlGroup: boolean = false,
   controlPriceTestId: string | null = null
 ): Promise<any> { // Adjust return type based on API
   const payload = {
