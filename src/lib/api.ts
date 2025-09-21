@@ -38,10 +38,19 @@ async function handleResponse<T>(response: Response): Promise<T> {
     
     throw new Error(`API request failed: ${response.status} ${response.statusText}`);
   }
-  // Handle cases with no content (e.g., 204 No Content)
+  // Handle cases with no content (e.g., 204 No Content, or 201 with empty body)
   if (response.status === 204) {
     return null as T; // Or handle appropriately based on expected return type
   }
+
+  // Check if response has content before parsing JSON
+  const contentLength = response.headers.get('content-length');
+  const contentType = response.headers.get('content-type');
+
+  if (contentLength === '0' || !contentType?.includes('application/json')) {
+    return null as T;
+  }
+
   return response.json() as Promise<T>;
 }
 
