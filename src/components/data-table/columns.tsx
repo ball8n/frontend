@@ -156,6 +156,15 @@ export const testGroupColumns: ColumnDef<TestGroup>[] = [
 // ===================================
 // Price Test Columns
 // ===================================
+export type PriceTestItemIn = {
+  id: string; // product_group_item_id (UUID)
+  control_price: number;
+  test_price_1: number;
+  test_price_2?: number;
+  test_price_3?: number;
+  asin?: string;
+};
+
 export type PriceTest = {
   id: string;
   name: string;

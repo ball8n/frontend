@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { AddTestDialog } from "./add-test-dialog";
 import { createPriceTest, fetchPriceTest } from "@/lib/api";
+import { PriceTestItemIn } from "@/components/data-table/columns";
 // Import the PriceInfo type (assuming it's exported or defined accessible)
 // If not exported from CreateTestDialog, might need to define it here or in a shared types file.
 
@@ -105,15 +106,22 @@ export default function TestsPage() {
     items: ProductInfo[]
   ): Promise<void> => {
     try {
-      // Convert ProductInfo[] to the format expected by createPriceTest API
-      const itemIds = items.map(item => item.id);
-      
+      // Convert ProductInfo[] to PriceTestItemIn[] format expected by createPriceTest API
+      const priceTestItems: PriceTestItemIn[] = items.map(item => ({
+        id: item.id,
+        control_price: item.control_price || 0,
+        test_price_1: item.test_price_1 || 0,
+        test_price_2: undefined,
+        test_price_3: undefined,
+        asin: item.asin,
+      }));
+
       const createdPriceTest = await createPriceTest(
         testGroupId,
         name,
         startDate,
         endDate,
-        itemIds,
+        priceTestItems,
         false, // isControlGroup - default to false
         null   // controlPriceTestId - default to null
       );
